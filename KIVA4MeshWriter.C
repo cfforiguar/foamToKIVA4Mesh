@@ -205,9 +205,7 @@ void Foam::meshWriters::STARCD::writePoints(const fileName& prefix) const
     forAll(points, ptI)
     {
         // convert [m] -> [mm]
-        os
-            << ptI + 1 << " "
-            << scaleFactor_ * points[ptI].x() << " "
+        os  << scaleFactor_ * points[ptI].x() << " "
             << scaleFactor_ * points[ptI].y() << " "
             << scaleFactor_ * points[ptI].z() << nl;
     }

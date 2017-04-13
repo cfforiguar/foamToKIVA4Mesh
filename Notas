@@ -63,12 +63,15 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *-Correrlos con el ejemplo del cubo
 *-Modificar los nombres delos archivos para sentar las bases de todo
 *-Compilar los nuevos archivos
--Añadirlos a mercurial
+*-Añadirlos a mercurial
 -Comentar lo que he entendido del código
 -Modificarlo para kiva4
-  -Escribir puntos
+*  -Escribir puntos
   -Escribir celdas
   -Escribir tipos de cara de cada celda
   -Escribir tipos de volúmenes de cada celda
   -Echarle un ojo a lo de malla estructurada
 ============
+
+USO
+./foamToKIVA4Mesh -scale 1

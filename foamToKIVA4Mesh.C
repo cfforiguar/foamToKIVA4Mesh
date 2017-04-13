@@ -80,9 +80,11 @@ int main(int argc, char *argv[])
         "suppress writing a boundary (.bnd) file"
     );
 
-    #include "setRootCase.H"
-    #include "createTime.H"
-
+    #include "setRootCase.H"  
+    //https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/setRootCase.H
+    #include "createTime.H"   
+    //https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createTime.H
+    
     instantList timeDirs = timeSelector::select0(runTime, args);
 
     fileName exportName = meshWriter::defaultMeshName;
@@ -91,8 +93,8 @@ int main(int argc, char *argv[])
         exportName += '-' + args.globalCaseName();
     }
 
-    // default: rescale from [m] to [mm]
-    scalar scaleFactor = 1000;
+    // default: do not rescale// from [m] to [mm]
+    scalar scaleFactor = 1;
     if (args.optionReadIfPresent("scale", scaleFactor))
     {
         if (scaleFactor <= 0)
@@ -101,29 +103,31 @@ int main(int argc, char *argv[])
         }
     }
 
-    #include "createPolyMesh.H"
+    #include "createPolyMesh.H"    //Crea la malla leyendo los archivos de OFoam
+    //https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createPolyMesh.H
 
     forAll(timeDirs, timeI)
     {
         runTime.setTime(timeDirs[timeI], timeI);
 
         #include "getTimeIndex.H"
+        //Archivo incluido en la misma carpeta que este código fuente. No confundir con otro!!
 
         polyMesh::readUpdateState state = mesh.readUpdate();
 
-        if (!timeI || state != polyMesh::UNCHANGED)
+        if (!timeI || state != polyMesh::UNCHANGED) //Ni idea de por qué mira que la malla no haya cambiado
         {
             meshWriters::STARCD writer(mesh, scaleFactor);
 
             if (args.optionFound("noBnd"))
             {
-                writer.noBoundary();
+                //writer.noBoundary(); //Deshabilitado, no sé qué hace
             }
-
+ 
             fileName meshName(exportName);
             if (state != polyMesh::UNCHANGED)
             {
-                meshName += '_' + runTime.timeName();
+                //meshName += '_' + runTime.timeName(); //Deshabilitado, no sé qué hace
             }
 
             writer.write(meshName);
