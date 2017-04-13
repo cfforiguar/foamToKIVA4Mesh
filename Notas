@@ -1,0 +1,74 @@
+#Instalar openFoam
+https://openfoam.org/download/4-1-source/
+
+#Cargar el entorno de OpenFoam
+source /home/carlos/OpenFOAM/OpenFOAM-4.0/etc/bashrc
+
+#Ir al directorio de openFOAM
+#https://openfoam.org/download/4-1-source/
+
+#mods de bins y libs
+https://cfd.direct/openfoam/user-guide/compiling-applications/
+
+cd $FOAM_RUN
+cp -r $FOAM_INST_DIR/OpenFOAM-4.0/applications/utilities/mesh/conversion/foamToStarMesh .
+cd foamToStarMesh
+wmake
+
+cp -r $FOAM_INST_DIR/OpenFOAM-4.0/applications/utilities/mesh/conversion/foamToStarMesh
+
+
+Archivos incluídos
+
+  doxigen
+    https://cpp.openfoam.org/v4/
+    
+  setRootCase.H
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/OpenFOAM/include/setRootCase.H
+    https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/setRootCase.H
+
+  createTime.H
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/OpenFOAM/include/createTime.H
+    https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createTime.H
+
+  createPolyMesh.H:
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/OpenFOAM/include/createPolyMesh.H
+    https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createPolyMesh.H
+
+  getTimeIndex.H ------> incluído en la msca carpeta que el conversor
+
+  STARCDMeshWriter.C
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/conversion/meshWriter/starcd/STARCDMeshWriter.C
+    https://github.com/OpenFOAM/OpenFOAM-4.x/blob/version-4.0/src/conversion/meshWriter/starcd/STARCDMeshWriter.C    
+    
+   $FOAM_INST_DIR/OpenFOAM-4.0/src/conversion/meshWriter/
+
+  createPolyMesh.H
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/OpenFOAM/include/createPolyMesh.H
+    https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createPolyMesh.H
+    
+Cosas que quiero modificar e incluir
+
+  foamToStarMesh
+    $FOAM_INST_DIR/OpenFOAM-4.0/applications/utilities/mesh/conversion/foamToStarMesh
+  STARCDMeshWriter.C
+    $FOAM_INST_DIR/OpenFOAM-4.0/src/conversion/meshWriter/starcd
+
+Archivos 
+
+============
+Objetivos: Cargar librerías de OpenFoam en el programa:
+*-Copiar los códigos de ejemplo de starmesh
+*-Compilarlos
+*-Correrlos con el ejemplo del cubo
+*-Modificar los nombres delos archivos para sentar las bases de todo
+*-Compilar los nuevos archivos
+-Añadirlos a mercurial
+-Comentar lo que he entendido del código
+-Modificarlo para kiva4
+  -Escribir puntos
+  -Escribir celdas
+  -Escribir tipos de cara de cada celda
+  -Escribir tipos de volúmenes de cada celda
+  -Echarle un ojo a lo de malla estructurada
+============

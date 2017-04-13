@@ -1,0 +1,4 @@
+foamToKIVA4Mesh.C
+KIVA4MeshWriter.C
+
+EXE = $(FOAM_USER_APPBIN)/foamToKIVA4Mesh
