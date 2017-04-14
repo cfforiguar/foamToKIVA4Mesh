@@ -67,9 +67,14 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 -Comentar lo que he entendido del código
 -Modificarlo para kiva4
 *  -Escribir puntos
-  -Escribir celdas
+*  -Escribir celdas
+    https://cfd.direct/openfoam/user-guide/mesh-description/    
   -Escribir tipos de cara de cada celda
   -Escribir tipos de volúmenes de cada celda
+    -Volver al archivo original
+    -compilar y ejecutar el bicho original
+    -renombar el archivo de condiciones de frontera
+    -usarlo para ver qué pasó en la conversión normal
   -Echarle un ojo a lo de malla estructurada
 ============
 

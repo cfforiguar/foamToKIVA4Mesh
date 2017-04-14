@@ -239,7 +239,7 @@ void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
     {
         label tableId = cellTableId_[cellId];
         label materialType  = 1;        // 1(fluid)
-        if (cellTable_.found(tableId))
+        if (cellTable_.found(tableId)) //UN: Esto puede ser interesante para lo del tipo de celda
         {
             const dictionary& dict = cellTable_[tableId];
             if (dict.found("MaterialType"))
@@ -260,97 +260,37 @@ void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
         // a registered primitive type
         if (shapeLookupIndex.found(mapIndex))
         {
-            label shapeId = shapeLookupIndex[mapIndex];
+            label shapeId = shapeLookupIndex[mapIndex];//UN: esto puede servir para lo de imprimir pirámides y demás
             const labelList& vrtList = shapes[cellId];
 
-            os  << cellId + 1
+/*Impresión de diferentes características de la celda
+            os  << cellId + 1               // # de celda
                 << " " << shapeId
-                << " " << vrtList.size()
-                << " " << tableId
-                << " " << materialType;
-
+                << " " << vrtList.size()    // 
+                << " " << tableId           // 
+                << " " << materialType;     // Tipo de material
+*/
             // primitives have <= 8 vertices, but prevent overrun anyhow
             // indent following lines for ease of reading
-            label count = 0;
-            forAll(vrtList, i)
-            {
-                if ((count % 8) == 0)
-                {
-                    os  << nl
-                        << "  " << cellId + 1;
-                }
-                os << " " << vrtList[i] + 1;
-                count++;
-            }
-            os << endl;
+
+         //UN: acá imprime las celdas
+         //Oden del hexaedro:
+             os 
+                << " " << vrtList[1] +1
+                << " " << vrtList[2] +1
+                << " " << vrtList[3] +1
+                << " " << vrtList[0] +1
+                << " " << vrtList[5] +1
+                << " " << vrtList[6] +1
+                << " " << vrtList[7] +1
+                << " " << vrtList[4] +1
+                << nl;
+             //UN:Pirámides y tetraedros quedan pendientes mientras se confirma que el método del hexaedro funciona
 
         }
-        else
+        else // treat as general polyhedral
         {
-            label shapeId = 255;        // treat as general polyhedral
-            const labelList& cFaces  = cells[cellId];
-
-            // create (beg,end) indices
-            List<label> indices(cFaces.size() + 1);
-            indices[0] = indices.size();
-
-            label count = indices.size();
-            // determine the total number of vertices
-            forAll(cFaces, facei)
-            {
-                count += faces[cFaces[facei]].size();
-                indices[facei+1] = count;
-            }
-
-            os  << cellId + 1
-                << " " << shapeId
-                << " " << count
-                << " " << tableId
-                << " " << materialType;
-
-            // write indices - max 8 per line
-            // indent following lines for ease of reading
-            count = 0;
-            forAll(indices, i)
-            {
-                if ((count % 8) == 0)
-                {
-                    os  << nl
-                        << "  " << cellId + 1;
-                }
-                os << " " << indices[i];
-                count++;
-            }
-
-            // write faces - max 8 per line
-            forAll(cFaces, facei)
-            {
-                label meshFace = cFaces[facei];
-                face f;
-
-                if (owner[meshFace] == cellId)
-                {
-                    f = faces[meshFace];
-                }
-                else
-                {
-                    f = faces[meshFace].reverseFace();
-                }
-
-                forAll(f, i)
-                {
-                    if ((count % 8) == 0)
-                    {
-                        os  << nl
-                            << "  " << cellId + 1;
-                    }
-
-                    os << " " << f[i] + 1;
-                    count++;
-                }
-            }
-
-            os << endl;
+          //UN: general polyhedral is not supported
         }
     }
 }
@@ -382,80 +322,26 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
 
     label defaultId = findDefaultBoundary();
 
-    //
-    // write boundary faces - skip Default_Boundary_Region entirely
-    //
-    label boundId = 0;
-    forAll(patches, patchi)
+    forAll(cells, celli)
     {
-        label regionId = patchi;
-        if (regionId == defaultId)
-        {
-            continue;  // skip - already written
-        }
-        else if (defaultId == -1 || regionId < defaultId)
-        {
-            regionId++;
-        }
-
-        label patchStart = patches[patchi].start();
-        label patchSize  = patches[patchi].size();
-        word  bndType = boundaryRegion_.boundaryType(patches[patchi].name());
-
-        for
-        (
-            label facei = patchStart;
-            facei < (patchStart + patchSize);
-            ++facei
-        )
-        {
-            label cellId = owner[facei];
-            const labelList& cFaces  = cells[cellId];
-            const cellShape& shape = shapes[cellId];
-            label cellFaceId = findIndex(cFaces, facei);
-
-            //      Info<< "cell " << cellId + 1 << " face " << facei
-            //          << " == " << faces[facei]
-            //          << " is index " << cellFaceId << " from " << cFaces;
-
-            // Unfortunately, the order of faces returned by
-            //   primitiveMesh::cells() is not necessarily the same
-            //   as defined by primitiveMesh::cellShapes()
-            // Thus, for registered primitive types, do the lookup ourselves.
-            // Finally, the cellModel face number is re-mapped to the
-            // STAR-CD local face number
-
-            label mapIndex = shape.model().index();
-
-            // a registered primitive type
-            if (faceLookupIndex.found(mapIndex))
-            {
-                const faceList sFaces = shape.faces();
-                forAll(sFaces, sFacei)
-                {
-                    if (faces[facei] == sFaces[sFacei])
-                    {
-                        cellFaceId = sFacei;
-                        break;
-                    }
-                }
-
-                mapIndex = faceLookupIndex[mapIndex];
-                cellFaceId = foamToStarFaceAddr[mapIndex][cellFaceId];
-            }
-            // Info<< endl;
-
-            boundId++;
-
-            os
-                << boundId
-                << " " << cellId + 1
-                << " " << cellFaceId + 1
-                << " " << regionId
-                << " " << 0
-                << " " << bndType.c_str()
-                << endl;
-        }
+      const labelList& cFaces  = cells[celli];
+      os
+        << celli << " " << 4.0 << " ";   //tipo de celda
+      forAll(cFaces, cFacei)
+      {
+        label cellFaceId = findIndex(cFaces, cFacei);
+        os
+          << cellFaceId << " ";    //tipo de cara left
+/*
+          << " " <<    //tipo de cara front
+          << " " <<    //tipo de cara bottom
+          << " " <<    //tipo de cara right
+          << " " <<    //tipo de cara derrire
+          << " " <<;    //tipo de cara top
+*/
+      }
+        os
+          << endl;
     }
 }
 
