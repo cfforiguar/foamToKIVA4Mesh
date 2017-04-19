@@ -68,13 +68,30 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 -Modificarlo para kiva4
 *  -Escribir puntos
 *  -Escribir celdas
+
+ //- Return cell zone mesh
+ 
     https://cfd.direct/openfoam/user-guide/mesh-description/    
   -Escribir tipos de cara de cada celda
+    -Hacer refactoring para el cambio de caras de OFoam a Kiva4
+    -Escribir en el formato de kiva4grid
   -Escribir tipos de volúmenes de cada celda
-    -Volver al archivo original
-    -compilar y ejecutar el bicho original
-    -renombar el archivo de condiciones de frontera
-    -usarlo para ver qué pasó en la conversión normal
+    -mirar las regiones de ofoam (ANOTAR ESO CUALDO LO VUELVA A VER)
+*    -Volver al archivo original
+*    -compilar y ejecutar el bicho original
+*    -renombar el archivo de condiciones de frontera
+*    -usarlo para ver qué pasó en la conversión normal
+*  -Hacer prueba intermedia que compruebe puntos, celdas y caras
+  -Hacer mallado de un cilindro en Salome
+    -Discretizrlo y simularlo
+  -Mallado de 1 cubo de 1 sólo elemento
+   -En salomé
+   -En kiva4grid
+   -Probar con eso:
+     -Vértices
+     -caras
+     -cFrontera
+  -
   -Echarle un ojo a lo de malla estructurada
 ============
 

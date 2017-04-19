@@ -29,6 +29,7 @@ License
 #include "SortableList.H"
 #include "OFstream.H"
 
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 const char* Foam::meshWriters::STARCD::defaultBoundaryName =
@@ -36,11 +37,12 @@ const char* Foam::meshWriters::STARCD::defaultBoundaryName =
 
 const Foam::label Foam::meshWriters::STARCD::foamToStarFaceAddr[4][6] =
 {
-    { 4, 5, 2, 3, 0, 1 },     // 11 = pro-STAR hex
+    { 0, 2, 4, 1, 3, 5 },     // 11 = KIVA4 hex
     { 0, 1, 4, 5, 2, -1 },    // 12 = pro-STAR prism
     { 5, 4, 2, 0, -1, -1 },   // 13 = pro-STAR tetra
     { 0, 4, 3, 5, 2, -1 }     // 14 = pro-STAR pyramid
 };
+
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -318,30 +320,216 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
 
     Info<< "Writing " << os.name() << " : "
         << (mesh_.nFaces() - patches[0].start()) << " boundaries" << endl;
+    Info<< "Writing " << os.name() << " : "
+        << (mesh_.nFaces()) << " caras" << endl;
+    const wordList lpatches=patches.names();
+    os << lpatches[0]<< " 0 " << lpatches[1]<< " 1 " << lpatches[2]<< " 2 "
+       << lpatches[3]<< " 3 " << lpatches[4]<< " 4 " << lpatches[5]<< " 5 " << endl;
 
+ cellList cellsNew=cells;
 
-    label defaultId = findDefaultBoundary();
-
+    int cellCt = 0;
     forAll(cells, celli)
     {
       const labelList& cFaces  = cells[celli];
-      os
-        << celli << " " << 4.0 << " ";   //tipo de celda
-      forAll(cFaces, cFacei)
+      const cellShape& shape = shapes[celli];
+      label mapIndex = shape.model().index();
+      int cFacesiCt = 0;
+      if (faceLookupIndex.found(mapIndex))
       {
-        label cellFaceId = findIndex(cFaces, cFacei);
-        os
-          << cellFaceId << " ";    //tipo de cara left
-/*
-          << " " <<    //tipo de cara front
-          << " " <<    //tipo de cara bottom
-          << " " <<    //tipo de cara right
-          << " " <<    //tipo de cara derrire
-          << " " <<;    //tipo de cara top
-*/
+        cFacesiCt = 0;
+        forAll(cFaces, cFacesi)
+        {
+          label cellFaceId = findIndex(cFaces, cFacesi);
+          const faceList sFaces = shape.faces();
+          forAll(sFaces, sFacei)
+          {
+             if (faces[cFaces[cFacesi]] == sFaces[sFacei])
+             {
+//                os << faces[cFaces[cFacesi]] << "° faces" << endl;
+                os << sFaces[sFacei] << "° sFaces" << endl;
+                os << shape << "° SHAPE" << endl;
+                os << cFacesi << "° cFacesi#" << endl;
+                os << sFacei << "° sFaces#" << endl;
+//                os << mapIndex << "°mapIndex" << endl;
+//                cellFaceId=sFacei;
+//                mapIndex = faceLookupIndex[mapIndex];
+
+//                os << cFacesi << " °face" << endl;
+//                os << sFacei << " °mface" << endl;
+                cellFaceId = foamToStarFaceAddr[0][sFacei];
+                //mtx[labels de caras de la celda][labels de caras del parche]//
+//                os << cellFaceId << " cellFaceId" << endl;
+//                os << (cFacesiCt==cFacesi) << "° id ok?" << endl;
+                os << cells[celli][cFacesi] << "° OLD" << endl;
+                os << cells[celli][cellFaceId] << "° NEW" << endl;
+                cellsNew[celli][cellFaceId]=cells[celli][cFacesi];
+             }
+            
+          }
+          cFacesiCt++;
+        }
       }
+      cellCt++;
+    }
+
+
+
+
+
+
+
+/*
+
+ forAll(faces, facesi)
+ {
+   label cellId = owner[facesi];
+   const labelList& cFaces  = cells[cellId];
+   const cellShape& shape = shapes[cellId];
+ 
+   label cellFaceId = findIndex(cFaces, facesi);
+
+   label mapIndex = shape.model().index();
+   if (faceLookupIndex.found(mapIndex))
+   {
+     const faceList sFaces = shape.faces();
+     forAll(sFaces, sFacei)
+     {
+//
+//       cells[celli][cFacei]=
+//
+       if (faces[facesi] == sFaces[sFacei])
+       {
+          cellFaceId = sFacei;
+          mapIndex = faceLookupIndex[mapIndex];
+          cellFaceId = foamToStarFaceAddr[mapIndex][cellFaceId];
+          //mtx[labels de caras de la celda][labels de caras del parche]//
+          cellsNew[cellId][cellFaceId]=0;//patches.whichPatch(facesi);
+         break;
+       }
+      }
+    }
+ }
+*/
+    forAll(cells, celli)
+    {
+      const labelList& cFaces  = cellsNew[celli];
+//      const faceList& faces = cellFaces_[celli];
+      
+      /////***************
+      //const faceList& cFacesB = cells[celli].faces();
+      /////***************
+      os
+//        << celli << " " //label de la celda
+        << 10 << " "   //tipo de celda
+        << cFaces << " "    //labels de las caras de la celda
+        << "";
+      //forAll(cFaces, cFacei)
+      //{
+         os
+           << patches.whichPatch(cFaces[0]) << " "    //tipo de cara left
+           << patches.whichPatch(cFaces[1]) << " "    //tipo de cara front
+           << patches.whichPatch(cFaces[2]) << " "    //tipo de cara bottom
+           << patches.whichPatch(cFaces[3]) << " "    //tipo de cara right
+           << patches.whichPatch(cFaces[4]) << " "    //tipo de cara derriere
+           << patches.whichPatch(cFaces[5]) << " "    //tipo de cara top
+           << "||"
+           << owner[cFaces[0]] << " "    //tipo de cara left
+           << owner[cFaces[1]] << " "    //tipo de cara front
+           << owner[cFaces[2]] << " "    //tipo de cara bottom
+           << owner[cFaces[3]] << " "    //tipo de cara right
+           << owner[cFaces[4]] << " "    //tipo de cara derriere
+           << owner[cFaces[5]] << " "    //tipo de cara top
+           << "||"
+/*           << cFaces[0] << " "    //tipo de cara left
+           << cFaces[1] << " "    //tipo de cara front
+           << cFaces[2] << " "    //tipo de cara bottom
+           << cFaces[3] << " "    //tipo de cara right
+           << cFaces[4] << " "    //tipo de cara derriere
+           << cFaces[5] << " "    //tipo de cara derriere
+           << "||"
+           << cellsNew  << " "
+           << "||"
+           << cells  << " "
+           
+           << "||"
+           << owner << " "    //
+           << "|| cFaces "
+           << cFaces << " "    //
+           << "|| cells "
+           << cells << " "    //
+           << "|| cells[celli][0] "
+           << cells[celli][0] << " "    //
+           << "|| faces[cells[celli][5]] "
+           << faces[cells[celli][5]] << " "    //
+
+
+          //# celda, # bicho correspondiente a la cara
+
+           
+/*
+           << patches.whichPatch(cFaces[0]) << " "    //tipo de cara left
+           << patches.whichPatch(cFaces[2]) << " "    //tipo de cara front
+           << patches.whichPatch(cFaces[4]) << " "    //tipo de cara bottom
+           << patches.whichPatch(cFaces[1]) << " "    //tipo de cara right
+           << patches.whichPatch(cFaces[3]) << " "    //tipo de cara derriere
+           << patches.whichPatch(cFaces[5]) << " "    //tipo de cara top
+*/
+           << ""; 
+       //}
         os
           << endl;
+          
+//        const faceListList& ebrio=mesh_.cellFaces();
+        
+        const cellShape& shape = shapes[celli];
+        //      Info<< "cell " << cellId + 1 << " face " << facei
+        //          << " == " << faces[facei]
+        //          << " is index " << cellFaceId << " from " << cFaces;
+
+        // Unfortunately, the order of faces returned by
+        //   primitiveMesh::cells() is not necessarily the same
+        //   as defined by primitiveMesh::cellShapes()
+        // Thus, for registered primitive types, do the lookup ourselves.
+        // Finally, the cellModel face number is re-mapped to the
+        // STAR-CD local face number
+
+        label mapIndex = shape.model().index();
+        
+        label cellFaceId;// = findIndex(cFaces, facei); //No sé qué hace eso de finIndex, pero sirve para crear el tipo de label que se necesita
+
+/*
+
+        // a registered primitive type
+        if (faceLookupIndex.found(mapIndex))
+        {
+            const faceList sFaces = shape.faces();
+            forAll(sFaces, sFacei) //caras del polihedro std
+            {
+              forAll(cFaces, cFacei)//caras de la celda
+              {
+//              if (Cara forma celda sFaces(sFacei) == Cara celda face (???)
+                if (sFacei == cFaces[cFacei])
+                {
+                    cellFaceId = sFacei;          
+                    mapIndex = faceLookupIndex[mapIndex];
+                    cellFaceId = foamToStarFaceAddr[mapIndex][cellFaceId];
+                    os
+                      << patches.whichPatch(cFaces[cellFaceId]) << " "    //tipo de cara left
+                      << "";
+                }
+              }
+            }
+         }
+
+
+*/
+
+
+
+
+         os
+           << endl;
     }
 }
 
