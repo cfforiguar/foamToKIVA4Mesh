@@ -40,11 +40,17 @@ SourceFiles
 
 #include "meshWriter.H"
 #include "IOstream.H"
+#include "fvMesh.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+class cell;
+bool operator==(const labelList&, const labelList&);
+inline bool operator!=(const labelList&, const labelList&);
 
 namespace meshWriters
 {
@@ -71,20 +77,17 @@ class STARCD
         void operator=(const STARCD&);
 
         //- Pro-STAR 4+ header format
-        static void writeHeader(Ostream&, const char* filetype);
+        static void writeHeader(Ostream&, const int nPoints, const int ncells);
 
         //- Write points
-        void writePoints(const fileName& baseName) const;
+        void writePoints(Ostream&) const;
 
         //- Write cells
-        void writeCells(const fileName& baseName) const;
+        void writeCells(Ostream&) const;
 
         //- Write boundary
-        void writeBoundary(const fileName& baseName) const;
-
-        void getCellTable();
-
-        label findDefaultBoundary() const;
+        void writeBoundary(Ostream&) const;
+        
 
 
 public:
@@ -100,7 +103,7 @@ public:
         //- Open a file for writing
         STARCD
         (
-            const polyMesh&,
+            const fvMesh&,
             const scalar scaleFactor = 1.0
         );
 

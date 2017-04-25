@@ -53,6 +53,7 @@ See also
 #include "timeSelector.H"
 #include "Time.H"
 #include "polyMesh.H"
+#include "fvMesh.H"
 #include "KIVA4MeshWriter.H"
 
 using namespace Foam;
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
     
     instantList timeDirs = timeSelector::select0(runTime, args);
 
-    fileName exportName = meshWriter::defaultMeshName;
+    fileName exportName = "kiva4grid";//meshWriter::defaultMeshName;
     if (args.optionFound("case"))
     {
         exportName += '-' + args.globalCaseName();
@@ -102,9 +103,12 @@ int main(int argc, char *argv[])
             scaleFactor = 1;
         }
     }
-
-    #include "createPolyMesh.H"    //Crea la malla leyendo los archivos de OFoam
+     
+    //createMesh.H hace lo mismo pero para una fvmesh
+    #include "createMesh.H"    //Crea la malla leyendo los archivos de OFoam
     //https://github.com/OpenFOAM/OpenFOAM-4.x/blob/master/src/OpenFOAM/include/createPolyMesh.H
+   
+
 
     forAll(timeDirs, timeI)
     {
@@ -113,9 +117,9 @@ int main(int argc, char *argv[])
         #include "getTimeIndex.H"
         //Archivo incluido en la misma carpeta que este código fuente. No confundir con otro!!
 
-        polyMesh::readUpdateState state = mesh.readUpdate();
+        fvMesh::readUpdateState state = mesh.readUpdate();
 
-        if (!timeI || state != polyMesh::UNCHANGED) //Ni idea de por qué mira que la malla no haya cambiado
+        if (!timeI || state != fvMesh::UNCHANGED) //Ni idea de por qué mira que la malla no haya cambiado
         {
             meshWriters::STARCD writer(mesh, scaleFactor);
 
@@ -125,7 +129,7 @@ int main(int argc, char *argv[])
             }
  
             fileName meshName(exportName);
-            if (state != polyMesh::UNCHANGED)
+            if (state != fvMesh::UNCHANGED)
             {
                 //meshName += '_' + runTime.timeName(); //Deshabilitado, no sé qué hace
             }

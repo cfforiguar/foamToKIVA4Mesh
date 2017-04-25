@@ -47,179 +47,102 @@ const Foam::label Foam::meshWriters::STARCD::foamToStarFaceAddr[4][6] =
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::label Foam::meshWriters::STARCD::findDefaultBoundary() const
+bool  Foam::operator==(const labelList& a, const labelList& b)
 {
-    const polyBoundaryMesh& patches = mesh_.boundaryMesh();
+   List<bool> fnd(a.size(), false);
+ 
+     forAll(b, bI)
+     {
+        label curLabel = b[bI];
 
-    label id = -1;
-
-    // find Default_Boundary_Region if it exists
-    forAll(patches, patchi)
-    {
-        if (defaultBoundaryName == patches[patchi].name())
-        {
-            id = patchi;
-            break;
-        }
-    }
-    return id;
+         bool found = false;
+ 
+         forAll(a, aI)
+         {
+             if (a[aI] == curLabel)
+             {
+                 found = true;
+                 fnd[aI] = true;
+                 break;
+             }
+         }
+         if (!found)
+         {
+             return false;
+         }
+     }
+ 
+     // check if all faces on a were marked
+     bool result = true;
+ 
+     forAll(fnd, aI)
+     {
+         result = (result && fnd[aI]);
+     }
+     return result;
 }
 
 
-void Foam::meshWriters::STARCD::getCellTable()
+void Foam::meshWriters::STARCD::writeHeader(Ostream& os, const int nPoints, const int nCells)
 {
-    // read constant/polyMesh/propertyName
-    IOList<label> ioList
-    (
-        IOobject
-        (
-            "cellTableId",
-            mesh_.time().constant(),
-            polyMesh::meshSubDir,
-            mesh_,
-            IOobject::READ_IF_PRESENT,
-            IOobject::NO_WRITE,
-            false
-        )
-    );
-
-    bool useCellZones = false;
-    cellTableId_.setSize(mesh_.nCells(), -1);
-
-    // get information from constant/polyMesh/cellTableId if possible
-    if (ioList.headerOk())
-    {
-        if (ioList.size() == mesh_.nCells())
-        {
-            cellTableId_.transfer(ioList);
-
-            if (cellTable_.empty())
-            {
-                Info<< "no cellTable information available" << endl;
-            }
-        }
-        else
-        {
-            WarningInFunction
-                << ioList.objectPath() << " has incorrect number of cells "
-                << " - use cellZone information"
-                << endl;
-
-            ioList.clear();
-            useCellZones = true;
-        }
-    }
-    else
-    {
-        useCellZones = true;
-    }
-
-
-    if (useCellZones)
-    {
-        if (cellTable_.empty())
-        {
-            Info<< "created cellTable from cellZones" << endl;
-            cellTable_ = mesh_;
-        }
-
-        // track if there are unzoned cells
-        label nUnzoned = mesh_.nCells();
-
-        // get the cellZone <-> cellTable correspondence
-        Info<< "matching cellZones to cellTable" << endl;
-
-        forAll(mesh_.cellZones(), zoneI)
-        {
-            const cellZone& cZone = mesh_.cellZones()[zoneI];
-            if (cZone.size())
-            {
-                nUnzoned -= cZone.size();
-
-                label tableId = cellTable_.findIndex(cZone.name());
-                if (tableId < 0)
-                {
-                    dictionary dict;
-
-                    dict.add("Label", cZone.name());
-                    dict.add("MaterialType", "fluid");
-                    tableId = cellTable_.append(dict);
-                }
-
-                forAll(cZone, i)
-                {
-                    cellTableId_[cZone[i]] = tableId;
-                }
-            }
-        }
-
-        if (nUnzoned)
-        {
-            dictionary dict;
-
-            dict.add("Label", "__unZonedCells__");
-            dict.add("MaterialType", "fluid");
-            label tableId = cellTable_.append(dict);
-
-            forAll(cellTableId_, i)
-            {
-                if (cellTableId_[i] < 0)
-                {
-                    cellTableId_[i] = tableId;
-                }
-            }
-        }
-    }
+    os  << "foamToKIVA4Mesh: By Universidad Nacional de Colombia"  << endl;
+    
+    os  << nCells << " " << nPoints << endl;
 }
 
 
-void Foam::meshWriters::STARCD::writeHeader(Ostream& os, const char* filetype)
+void Foam::meshWriters::STARCD::writePoints(Ostream& os) const
 {
-    os  << "PROSTAR_" << filetype << nl
-        << 4000
-        << " " << 0
-        << " " << 0
-        << " " << 0
-        << " " << 0
-        << " " << 0
-        << " " << 0
-        << " " << 0
-        << endl;
-}
-
-
-void Foam::meshWriters::STARCD::writePoints(const fileName& prefix) const
-{
-    OFstream os(prefix + ".vrt");
-    writeHeader(os, "VERTEX");
-
     // Set the precision of the points data to 10
     os.precision(10);
 
     // force decimal point for Fortran input
     os.setf(std::ios::showpoint);
-
+    
+    //Foam points    
     const pointField& points = mesh_.points();
+    const cellList& cells  = mesh_.cells();
 
+    //Shaped points
+    const cellShapeList& sCells = mesh_.cellShapes();
+
+    const cellShape& sCell = sCells[0];//[cellId];//UN: OJO, esto se deb adaptar para otras formas elementales
+    const pointField& sPoints = sCell.points(points);
+    
+    
     Info<< "Writing " << os.name() << " : "
-        << points.size() << " points" << endl;
-
+        << points.size() << " points" << endl
+        << sCell.model() << "modelo" << endl
+        << "";
+        
+    os  << "Mapeados a shape"<< nl;
+    forAll(sPoints, ptI)
+    {
+        // convert [m] -> [mm]
+        os
+            << ptI << " "
+            << scaleFactor_ * sPoints[ptI].x() << " "
+            << scaleFactor_ * sPoints[ptI].y() << " "
+            << scaleFactor_ * sPoints[ptI].z() << nl;
+    }
+    os  << "Sin mapear"<< nl;
     forAll(points, ptI)
     {
         // convert [m] -> [mm]
-        os  << scaleFactor_ * points[ptI].x() << " "
+        os
+            << ptI << " "
+            << scaleFactor_ * points[ptI].x() << " "
             << scaleFactor_ * points[ptI].y() << " "
             << scaleFactor_ * points[ptI].z() << nl;
     }
+
     os.flush();
 
 }
 
 
-void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
+void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
 {
-    OFstream os(prefix + ".cel");
-    writeHeader(os, "CELL");
 
     // this is what we seem to need
     // map foam cellModeller index -> star shape
@@ -229,7 +152,7 @@ void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
     shapeLookupIndex.insert(tetModel->index(), 13);
     shapeLookupIndex.insert(pyrModel->index(), 14);
 
-    const cellShapeList& shapes = mesh_.cellShapes();
+    const cellShapeList& sCells = mesh_.cellShapes();
     const cellList& cells  = mesh_.cells();
     const faceList& faces  = mesh_.faces();
     const labelList& owner = mesh_.faceOwner();
@@ -237,71 +160,171 @@ void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
     Info<< "Writing " << os.name() << " : "
         << cells.size() << " cells" << endl;
 
+    cellList posFaces = cells;//Me guarda la lista de caras que usaré para top, bottom, etc
     forAll(cells, cellId)
     {
-        label tableId = cellTableId_[cellId];
-        label materialType  = 1;        // 1(fluid)
-        if (cellTable_.found(tableId)) //UN: Esto puede ser interesante para lo del tipo de celda
-        {
-            const dictionary& dict = cellTable_[tableId];
-            if (dict.found("MaterialType"))
-            {
-                word matType;
-                dict.lookup("MaterialType") >> matType;
-                if (matType == "solid")
-                {
-                    materialType = 2;
-                }
+        const cellShape& sCell = sCells[cellId];
+        label mapIndex = sCell.model().index();
 
-            }
-        }
+        os 
+            << sCell  << " sCell"
+            << nl;
 
-        const cellShape& shape = shapes[cellId];
-        label mapIndex = shape.model().index();
-
-        // a registered primitive type
-        if (shapeLookupIndex.found(mapIndex))
-        {
-            label shapeId = shapeLookupIndex[mapIndex];//UN: esto puede servir para lo de imprimir pirámides y demás
-            const labelList& vrtList = shapes[cellId];
-
-/*Impresión de diferentes características de la celda
-            os  << cellId + 1               // # de celda
-                << " " << shapeId
-                << " " << vrtList.size()    // 
-                << " " << tableId           // 
-                << " " << materialType;     // Tipo de material
+/*
+        const labelList& sFaces = sCell.meshFaces(faces, cells[cellId]);
+        os 
+            << sFaces  << " sFaces"
+            << nl;
+            
 */
-            // primitives have <= 8 vertices, but prevent overrun anyhow
-            // indent following lines for ease of reading
+/*
+        const edgeList& edges = mesh_.edges();
+        const labelList sEgdes=sCell.meshEdges(edges,cells[cellId]); 
+        os 
+            << sEgdes  << " sEgdes"
+            << nl;
+*/
+          // a registered primitive type
+//        if (shapeLookupIndex.found(mapIndex))
+//        {
+//            label shapeId = shapeLookupIndex[mapIndex];//UN: esto puede servir para lo de imprimir pirámides y demás
 
-         //UN: acá imprime las celdas
-         //Oden del hexaedro:
-             os 
-                << " " << vrtList[1] +1
-                << " " << vrtList[2] +1
-                << " " << vrtList[3] +1
-                << " " << vrtList[0] +1
-                << " " << vrtList[5] +1
-                << " " << vrtList[6] +1
-                << " " << vrtList[7] +1
-                << " " << vrtList[4] +1
+
+    //Foam points    
+    const pointField& points = mesh_.points();
+
+    //Shaped points
+
+    const pointField& sPoints = sCell.points(points);
+    
+            const labelList& sCellPoints = sCell;
+            os 
+                << " " << sPoints[sCellPoints[0]] << points[sCellPoints[0]]
+                << " " << sCellPoints[1]
+                << " " << sCellPoints[2]
+                << " " << sCellPoints[3]
+                << " " << sCellPoints[4]
+                << " " << sCellPoints[5]
+                << " " << sCellPoints[6]
+                << " " << sCellPoints[7]
                 << nl;
-             //UN:Pirámides y tetraedros quedan pendientes mientras se confirma que el método del hexaedro funciona
+             const labelList& cellPoints = mesh_.cellPoints(cellId);//Puntos de la celda local
+             os 
+                << " " << sPoints[cellPoints[0]] << points[cellPoints[0]]
+                << " " << cellPoints[1]
+                << " " << cellPoints[2]
+                << " " << cellPoints[3]
+                << " " << cellPoints[4]
+                << " " << cellPoints[5]
+                << " " << cellPoints[6]
+                << " " << cellPoints[7]
+                << nl;
+                
+                
+    const faceList& rawModelFaces = sCell.model().modelFaces();
+//        os << rawModelFaces  << " rawModelFaces" << nl; //Caras fictis que no se usan en el programa
+        
+    const faceList 	slistOfFaces = sCell.model().faces(sCellPoints); 
+        os << slistOfFaces  << " slistOfFaces" << nl; //Caras según los ptos sin mapear
+//        os << sCellPoints  << " sCellPoints" << nl;
+        
+    const faceList 	listOfFaces = sCell.model().faces(cellPoints);
+//        os << listOfFaces  << " listOfFaces" << nl; //Caras fictis que no se usan en el programa
+//        os << cellPoints  << " cellPoints" << nl;
+        
+        
+        
+    const labelList 	LabelOfFaces = sCell.meshFaces(faces,cells[0]);
+        os << LabelOfFaces  << " LabelOfFaces" << nl;
+        os << cells  << " cells" << nl;
+        os << LabelOfFaces[0]  << " LabelOfFaces[0]" << nl;
+        os << faces[LabelOfFaces[0]]  << " faces[LabelOfFaces[0]] " << nl;
+        
+    os << sCell  << " sCell" << nl;
+    os << cells  << " cells" << nl;
+    os << sCell.faces()  << " sCell.faces()" << nl; //Caras según los ptos sin mapear
+    os << faces  << " faces= cells_.faces()" << nl; //Caras en el orden de OFOAM
+    os << sCell.meshFaces(faces,cells[0])  << " sCell.meshFaces(faces,cells[0])" << nl;
+//    os << " " << "sPoints" << sPoints << nl;
+//    os << " " << "points" << points << nl;
 
-        }
-        else // treat as general polyhedral
+    os << " " << "sCell.faces()[0][0]" << sCell.faces()[0][0] << nl;
+    os << " " << "sCell.faces()[0] " << sCell.faces()[0] << nl;
+
+    const vectorField& facesCentres = mesh_.faceCentres(); //Return cell centres as volVectorField. More...   
+    const vectorField& cellsCentres = mesh_.cellCentres(); //Return cell centres as volVectorField. More...       
+    vectorField distFaceCentres = facesCentres;
+    
+    //UN: Para las demás caras, usar label sCellnFaces=sCell.nFaces() 
+    //UN:    Esto funciona para cualquier cara pero lo hace leeeento. Es mejor separar por tipos de caras y luego hacer un loop para cada tipo
+    float test[6] {};
+//    forAll(cells, cellId)
+    const labelList& cFaces  = cells[cellId];
+    os << " " << "posFaces " << posFaces  << nl;
+    forAll (cFaces,cFacesi)//Caras de la respectiva celda
+    {
+      distFaceCentres[cFacesi]=facesCentres[cFacesi]-cellsCentres[cellId];
+      os << " " << "distFaceCentres [" << cFacesi << "] " << distFaceCentres[cFacesi] << nl;
+      //OFOAM: Left, Right, Front, Back, Bottom, Top
+      //KIVA: ???? Left, Right, Front, Back, Bottom, Top
+      if (test[0]>distFaceCentres[cFacesi].x()) posFaces[cellId][0]=cFaces[cFacesi];//x min
+      if (test[1]<distFaceCentres[cFacesi].x()) posFaces[cellId][1]=cFaces[cFacesi];//x max
+      if (test[2]>distFaceCentres[cFacesi].y()) posFaces[cellId][2]=cFaces[cFacesi];//y min
+      if (test[3]<distFaceCentres[cFacesi].y()) posFaces[cellId][3]=cFaces[cFacesi];//y max
+      if (test[4]>distFaceCentres[cFacesi].z()) posFaces[cellId][4]=cFaces[cFacesi];//z min
+      if (test[5]<distFaceCentres[cFacesi].z()) posFaces[cellId][5]=cFaces[cFacesi];//z max
+      //UN: ESTE ALGORITMO FALLARÍA SI ALGÚN ELEMENTO ESTÁ A EXACTAMENTE 45° PUES AL MENOS 2 CARAS TENDRÍAN VALORES IDÉNTICOS EN CADA COORDENADA
+      os << " " << "cFaces[" << cFacesi << "] " << cFaces[cFacesi] << nl;
+      label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
+      os << "cellFaceId " << cellFaceId << nl;
+
+      //pto 0 según manual de oFoam caras:[4,0,2]
+      //pto 1 según manual de oFoam caras:[4,1,2]
+      //pto 2 según manual de oFoam caras:[4,1,3]
+      //pto 3 según manual de oFoam caras:[4,0,3]
+      //pto 4 según manual de oFoam caras:[5,0,2]
+      //pto 5 según manual de oFoam caras:[5,1,2]
+      //pto 6 según manual de oFoam caras:[5,1,3]
+      //pto 7 según manual de oFoam caras:[5,0,3]
+      
+      const labelListList& ebrio=mesh_.pointFaces();//UN: Halla listas de caras comunes a un punto
+      
+      os << " " << "ebrio[0] " << ebrio[0]  << nl;
+      labelList borracho=ebrio[0];
+      os << " " << "ebrio[0]" << ebrio[0]  << nl;
+      borracho[0]=ebrio[0][0];
+      borracho[1]=ebrio[0][1];
+      borracho[2]=ebrio[0][2];
+      if (ebrio[0]==borracho) os << "ebrio!! " << nl;
+      borracho[0]=ebrio[0][1];
+      borracho[1]=ebrio[0][2];
+      borracho[2]=ebrio[0][0];
+      os << " " << "borracho " << borracho  << nl;
+      forAll (ebrio,ebrioi)//Caras de la respectiva celda
+      {
+          if (ebrio[ebrioi]==borracho) os << "ebrio 2 veces!! " << nl;
+      }
+      
+    }
+    os << " " << "posFaces " << posFaces  << nl;
+    const labelListList& ebrio=mesh_.pointFaces();
+    os << " " << "ebrio " << ebrio  << nl;
+    
+    
+    //UN:Pirámides y tetraedros quedan pendientes mientras se confirma que el método del hexaedro funciona
+
+//        }
+/*        else // treat as general polyhedral
         {
           //UN: general polyhedral is not supported
         }
+        */
     }
 }
 
 
-void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
+void Foam::meshWriters::STARCD::writeBoundary(Ostream& os) const
 {
-    OFstream os(prefix + ".bnd");
-    writeHeader(os, "BOUNDARY");
 
     const cellShapeList& shapes = mesh_.cellShapes();
     const cellList& cells  = mesh_.cells();
@@ -322,11 +345,26 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
         << (mesh_.nFaces() - patches[0].start()) << " boundaries" << endl;
     Info<< "Writing " << os.name() << " : "
         << (mesh_.nFaces()) << " caras" << endl;
+
+/*//Recupera y escribe los nombres de los parches 
     const wordList lpatches=patches.names();
     os << lpatches[0]<< " 0 " << lpatches[1]<< " 1 " << lpatches[2]<< " 2 "
        << lpatches[3]<< " 3 " << lpatches[4]<< " 4 " << lpatches[5]<< " 5 " << endl;
+*/
 
  cellList cellsNew=cells;
+
+
+    //      Info<< "cell " << cellId + 1 << " face " << facei
+    //          << " == " << faces[facei]
+    //          << " is index " << cellFaceId << " from " << cFaces;
+
+    // Unfortunately, the order of faces returned by
+    //   primitiveMesh::cells() is not necessarily the same
+    //   as defined by primitiveMesh::cellShapes()
+    // Thus, for registered primitive types, do the lookup ourselves.
+    // Finally, the cellModel face number is re-mapped to the
+    // STAR-CD local face number
 
     int cellCt = 0;
     forAll(cells, celli)
@@ -347,10 +385,12 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
              if (faces[cFaces[cFacesi]] == sFaces[sFacei])
              {
 //                os << faces[cFaces[cFacesi]] << "° faces" << endl;
+/*
                 os << sFaces[sFacei] << "° sFaces" << endl;
                 os << shape << "° SHAPE" << endl;
                 os << cFacesi << "° cFacesi#" << endl;
                 os << sFacei << "° sFaces#" << endl;
+*/
 //                os << mapIndex << "°mapIndex" << endl;
 //                cellFaceId=sFacei;
 //                mapIndex = faceLookupIndex[mapIndex];
@@ -361,8 +401,8 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
                 //mtx[labels de caras de la celda][labels de caras del parche]//
 //                os << cellFaceId << " cellFaceId" << endl;
 //                os << (cFacesiCt==cFacesi) << "° id ok?" << endl;
-                os << cells[celli][cFacesi] << "° OLD" << endl;
-                os << cells[celli][cellFaceId] << "° NEW" << endl;
+//                os << cells[celli][cFacesi] << "° OLD" << endl;
+//                os << cells[celli][cellFaceId] << "° NEW" << endl;
                 cellsNew[celli][cellFaceId]=cells[celli][cFacesi];
              }
             
@@ -374,43 +414,6 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
     }
 
 
-
-
-
-
-
-/*
-
- forAll(faces, facesi)
- {
-   label cellId = owner[facesi];
-   const labelList& cFaces  = cells[cellId];
-   const cellShape& shape = shapes[cellId];
- 
-   label cellFaceId = findIndex(cFaces, facesi);
-
-   label mapIndex = shape.model().index();
-   if (faceLookupIndex.found(mapIndex))
-   {
-     const faceList sFaces = shape.faces();
-     forAll(sFaces, sFacei)
-     {
-//
-//       cells[celli][cFacei]=
-//
-       if (faces[facesi] == sFaces[sFacei])
-       {
-          cellFaceId = sFacei;
-          mapIndex = faceLookupIndex[mapIndex];
-          cellFaceId = foamToStarFaceAddr[mapIndex][cellFaceId];
-          //mtx[labels de caras de la celda][labels de caras del parche]//
-          cellsNew[cellId][cellFaceId]=0;//patches.whichPatch(facesi);
-         break;
-       }
-      }
-    }
- }
-*/
     forAll(cells, celli)
     {
       const labelList& cFaces  = cellsNew[celli];
@@ -422,7 +425,7 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
       os
 //        << celli << " " //label de la celda
         << 10 << " "   //tipo de celda
-        << cFaces << " "    //labels de las caras de la celda
+//        << cFaces << " "    //labels de las caras de la celda
         << "";
       //forAll(cFaces, cFacei)
       //{
@@ -433,6 +436,7 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
            << patches.whichPatch(cFaces[3]) << " "    //tipo de cara right
            << patches.whichPatch(cFaces[4]) << " "    //tipo de cara derriere
            << patches.whichPatch(cFaces[5]) << " "    //tipo de cara top
+/*
            << "||"
            << owner[cFaces[0]] << " "    //tipo de cara left
            << owner[cFaces[1]] << " "    //tipo de cara front
@@ -477,53 +481,20 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
 */
            << ""; 
        //}
+/*       
         os
           << endl;
+*/
           
 //        const faceListList& ebrio=mesh_.cellFaces();
         
         const cellShape& shape = shapes[celli];
-        //      Info<< "cell " << cellId + 1 << " face " << facei
-        //          << " == " << faces[facei]
-        //          << " is index " << cellFaceId << " from " << cFaces;
-
-        // Unfortunately, the order of faces returned by
-        //   primitiveMesh::cells() is not necessarily the same
-        //   as defined by primitiveMesh::cellShapes()
-        // Thus, for registered primitive types, do the lookup ourselves.
-        // Finally, the cellModel face number is re-mapped to the
-        // STAR-CD local face number
 
         label mapIndex = shape.model().index();
         
         label cellFaceId;// = findIndex(cFaces, facei); //No sé qué hace eso de finIndex, pero sirve para crear el tipo de label que se necesita
 
-/*
 
-        // a registered primitive type
-        if (faceLookupIndex.found(mapIndex))
-        {
-            const faceList sFaces = shape.faces();
-            forAll(sFaces, sFacei) //caras del polihedro std
-            {
-              forAll(cFaces, cFacei)//caras de la celda
-              {
-//              if (Cara forma celda sFaces(sFacei) == Cara celda face (???)
-                if (sFacei == cFaces[cFacei])
-                {
-                    cellFaceId = sFacei;          
-                    mapIndex = faceLookupIndex[mapIndex];
-                    cellFaceId = foamToStarFaceAddr[mapIndex][cellFaceId];
-                    os
-                      << patches.whichPatch(cFaces[cellFaceId]) << " "    //tipo de cara left
-                      << "";
-                }
-              }
-            }
-         }
-
-
-*/
 
 
 
@@ -538,7 +509,7 @@ void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
 
 Foam::meshWriters::STARCD::STARCD
 (
-    const polyMesh& mesh,
+    const fvMesh& mesh,
     const scalar scaleFactor
 )
 :
@@ -546,7 +517,6 @@ Foam::meshWriters::STARCD::STARCD
 {
     boundaryRegion_.readDict(mesh_);
     cellTable_.readDict(mesh_);
-    getCellTable();
 }
 
 
@@ -560,10 +530,7 @@ Foam::meshWriters::STARCD::~STARCD()
 
 void Foam::meshWriters::STARCD::rmFiles(const fileName& baseName) const
 {
-    rm(baseName + ".vrt");
-    rm(baseName + ".cel");
-    rm(baseName + ".bnd");
-    rm(baseName + ".inp");
+    rm(baseName);
 }
 
 
@@ -584,16 +551,24 @@ bool Foam::meshWriters::STARCD::write(const fileName& meshName) const
             baseName += "_" + mesh_.time().timeName();
         }
     }
-
+    
     rmFiles(baseName);
-    writePoints(baseName);
-    writeCells(baseName);
-
+    OFstream os(baseName);
+    const pointField& points = mesh_.points();
+    const cellList& cells  = mesh_.cells();
+    writeHeader(os, points.size(), cells.size());
+    writePoints(os);
+    writeCells(os);
+    
+    
     if (writeBoundary_)
     {
-        writeBoundary(baseName);
+        writeBoundary(os);
     }
-
+    //UNPending "structured mesh" part
+    os 
+      << "0" << endl
+      << "0" << endl;
     return true;
 }
 

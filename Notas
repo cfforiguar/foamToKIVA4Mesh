@@ -17,6 +17,11 @@ wmake
 
 cp -r $FOAM_INST_DIR/OpenFOAM-4.0/applications/utilities/mesh/conversion/foamToStarMesh
 
+#Clases relacionadas con el mallado:    https://cpp.openfoam.org/v4/
+cellShape #"Forma" de las celdas
+primitiveMesh # Cell-face mesh analysis engine3
+polyMesh #Mesh consisting of general polyhedral
+fvMesh #
 
 Archivos incluídos
 
@@ -69,7 +74,7 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *  -Escribir puntos
 *  -Escribir celdas
 
- //- Return cell zone mesh
+ //- Return cell zone mesh, getCellTable() tiene cosas de cellzones. Se eliminó por si acaso me estaba afectando el código
  
     https://cfd.direct/openfoam/user-guide/mesh-description/    
   -Escribir tipos de cara de cada celda
@@ -85,14 +90,40 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
   -Hacer mallado de un cilindro en Salome
     -Discretizrlo y simularlo
   -Mallado de 1 cubo de 1 sólo elemento
-   -En salomé
-   -En kiva4grid
+*   -En salomé
+*   -En kiva4grid
+*  -Escribir el kiva4grid definitivo
    -Probar con eso:
-     -Vértices
-     -caras
-     -cFrontera
-  -
+*     -Están bien mapeados los Vértices ->NO
+*     -Están bien mapeados las caras ->NO
+*     -Están bien mapeados las cFrontera ->NPI
+*  -Analizar las otras funciones donde se hace uso del mapeo
   -Echarle un ojo a lo de malla estructurada
+*  -funciones map en ensightMesh.C -> Para las mallas
+  -función inplaceRenumber en ensightMesh.C?
+  
+  -Hacer programa que conforme la hipótesis del orden de las celdas hexaedricas
+*    -eliminar la dependencia de writemesh.h --> igual esta librería puede ser útil después.
+*    -Hacer que use fvMesh en todo lado
+    -Consultar cada una de caras mapeadas de las celdas
+*    -Sacar el centroide de cada una de las caras mapeadas
+*    -Restar al centroide de la celda al centroide de la cara
+*    -Clasificar los valores positivos en cada eje como máximos y negativos como mínimos respecto a cada eje
+    -Basado en lo anterior, identificar caras posiciones de vértices
+      -Encontrar los vértices comunes a una cara
+      -Implementar == para los grupos de vértices hallados
+    -Mapear caras y vértices a posiciones de KIVA4
+    -imprimir lo que se mapeó
+    -Ver si se cumple el patrón para mallas diferentes
+      -Malla de 1 elementos
+         -para las caras
+         -para los puntos
+      -Malla de 2 elementos
+         -para las caras
+         -para los puntos
+      -Malla de 4 elementos
+         -para las caras
+         -para los puntos
 ============
 
 USO
