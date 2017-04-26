@@ -109,12 +109,13 @@ void Foam::meshWriters::STARCD::writePoints(Ostream& os) const
     const cellShape& sCell = sCells[0];//[cellId];//UN: OJO, esto se deb adaptar para otras formas elementales
     const pointField& sPoints = sCell.points(points);
     
-    
+
     Info<< "Writing " << os.name() << " : "
         << points.size() << " points" << endl
         << sCell.model() << "modelo" << endl
         << "";
-        
+
+/* //LABEL: TESTS 
     os  << "Mapeados a shape"<< nl;
     forAll(sPoints, ptI)
     {
@@ -125,7 +126,9 @@ void Foam::meshWriters::STARCD::writePoints(Ostream& os) const
             << scaleFactor_ * sPoints[ptI].y() << " "
             << scaleFactor_ * sPoints[ptI].z() << nl;
     }
+*/ //LABEL: TESTS
     os  << "Sin mapear"<< nl;
+
     forAll(points, ptI)
     {
         // convert [m] -> [mm]
@@ -165,31 +168,32 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
     {
         const cellShape& sCell = sCells[cellId];
         label mapIndex = sCell.model().index();
-
+/* //LABEL: TESTS
         os 
             << sCell  << " sCell"
             << nl;
 
-/*
+
         const labelList& sFaces = sCell.meshFaces(faces, cells[cellId]);
         os 
             << sFaces  << " sFaces"
             << nl;
             
-*/
-/*
+*/ //LABEL: TESTS
+
+/* //LABEL: TESTS
         const edgeList& edges = mesh_.edges();
         const labelList sEgdes=sCell.meshEdges(edges,cells[cellId]); 
         os 
             << sEgdes  << " sEgdes"
             << nl;
-*/
+
           // a registered primitive type
 //        if (shapeLookupIndex.found(mapIndex))
 //        {
 //            label shapeId = shapeLookupIndex[mapIndex];//UN: esto puede servir para lo de imprimir pirámides y demás
 
-
+*/ //LABEL: TESTS
     //Foam points    
     const pointField& points = mesh_.points();
 
@@ -198,6 +202,7 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
     const pointField& sPoints = sCell.points(points);
     
             const labelList& sCellPoints = sCell;
+            /* //LABEL: TESTS
             os 
                 << " " << sPoints[sCellPoints[0]] << points[sCellPoints[0]]
                 << " " << sCellPoints[1]
@@ -208,7 +213,9 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
                 << " " << sCellPoints[6]
                 << " " << sCellPoints[7]
                 << nl;
+            */ //LABEL: TESTS    
              const labelList& cellPoints = mesh_.cellPoints(cellId);//Puntos de la celda local
+            /* //LABEL: TESTS 
              os 
                 << " " << sPoints[cellPoints[0]] << points[cellPoints[0]]
                 << " " << cellPoints[1]
@@ -219,13 +226,13 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
                 << " " << cellPoints[6]
                 << " " << cellPoints[7]
                 << nl;
-                
+             */ //LABEL: TESTS  
                 
     const faceList& rawModelFaces = sCell.model().modelFaces();
 //        os << rawModelFaces  << " rawModelFaces" << nl; //Caras fictis que no se usan en el programa
         
     const faceList 	slistOfFaces = sCell.model().faces(sCellPoints); 
-        os << slistOfFaces  << " slistOfFaces" << nl; //Caras según los ptos sin mapear
+//        os << slistOfFaces  << " slistOfFaces" << nl; //Caras según los ptos sin mapear
 //        os << sCellPoints  << " sCellPoints" << nl;
         
     const faceList 	listOfFaces = sCell.model().faces(cellPoints);
@@ -235,6 +242,7 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
         
         
     const labelList 	LabelOfFaces = sCell.meshFaces(faces,cells[0]);
+/* //LABEL: TESTS    
         os << LabelOfFaces  << " LabelOfFaces" << nl;
         os << cells  << " cells" << nl;
         os << LabelOfFaces[0]  << " LabelOfFaces[0]" << nl;
@@ -250,7 +258,7 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
 
     os << " " << "sCell.faces()[0][0]" << sCell.faces()[0][0] << nl;
     os << " " << "sCell.faces()[0] " << sCell.faces()[0] << nl;
-
+*/ //LABEL: TESTS
     const vectorField& facesCentres = mesh_.faceCentres(); //Return cell centres as volVectorField. More...   
     const vectorField& cellsCentres = mesh_.cellCentres(); //Return cell centres as volVectorField. More...       
     vectorField distFaceCentres = facesCentres;
@@ -267,22 +275,24 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
       os << " " << "distFaceCentres [" << cFacesi << "] " << distFaceCentres[cFacesi] << nl;
       //OFOAM: Left, Right, Front, Back, Bottom, Top
       //KIVA: ???? Left, Right, Front, Back, Bottom, Top
-      if (test[0]>distFaceCentres[cFacesi].x()) posFaces[cellId][0]=cFaces[cFacesi];//x min
-      if (test[1]<distFaceCentres[cFacesi].x()) posFaces[cellId][1]=cFaces[cFacesi];//x max
-      if (test[2]>distFaceCentres[cFacesi].y()) posFaces[cellId][2]=cFaces[cFacesi];//y min
-      if (test[3]<distFaceCentres[cFacesi].y()) posFaces[cellId][3]=cFaces[cFacesi];//y max
-      if (test[4]>distFaceCentres[cFacesi].z()) posFaces[cellId][4]=cFaces[cFacesi];//z min
-      if (test[5]<distFaceCentres[cFacesi].z()) posFaces[cellId][5]=cFaces[cFacesi];//z max
+      if (test[0]>distFaceCentres[cFacesi].x()) posFaces[cellId][0]=cFaces[cFacesi];//x min = posFaces[cellId][0]
+      if (test[1]<distFaceCentres[cFacesi].x()) posFaces[cellId][1]=cFaces[cFacesi];//x max =       .
+      if (test[2]>distFaceCentres[cFacesi].y()) posFaces[cellId][2]=cFaces[cFacesi];//y min =       .
+      if (test[3]<distFaceCentres[cFacesi].y()) posFaces[cellId][3]=cFaces[cFacesi];//y max =       .
+      if (test[4]>distFaceCentres[cFacesi].z()) posFaces[cellId][4]=cFaces[cFacesi];//z min =       .
+      if (test[5]<distFaceCentres[cFacesi].z()) posFaces[cellId][5]=cFaces[cFacesi];//z max =       .
       //UN: ESTE ALGORITMO FALLARÍA SI ALGÚN ELEMENTO ESTÁ A EXACTAMENTE 45° PUES AL MENOS 2 CARAS TENDRÍAN VALORES IDÉNTICOS EN CADA COORDENADA
       os << " " << "cFaces[" << cFacesi << "] " << cFaces[cFacesi] << nl;
       label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
       os << "cellFaceId " << cellFaceId << nl;
     }
     
-    const labelListList& fPoints=mesh_.pointFaces();
-      os << "fPoints " << fPoints << nl;
+    //Tomar los ptos de cada celda. ¿cell[0....7]?
+ 
+    //Usar dichos ptos para acceder a los fPoints respectivos
+    //Hallar la posición de dichos pts en la celda
+    
       
-    List <labelList> pointFacesShape(0);
     int lCaras [8][3] = {//véase 5.1.3: Cell Shapes:
                          //https://cfd.direct/openfoam/user-guide/mesh-description/
                         {4, 0, 2},//Caras que intersecan el pto 0 según manual oFoam 
@@ -294,31 +304,47 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
                         {5, 1, 3},//Caras que intersecan el pto 6 según manual oFoam 
                         {5, 0, 3},//Caras que intersecan el pto 7 según manual oFoam 
                         };
-                        
-    for (int i=0;i<=7;i++)//Caras de la respectiva celda
+    
+    const labelListList& fPoints=mesh_.pointFaces();//Quiero que sean los fPoints de cada celda, en vez de todos
+      os << "fPoints " << fPoints << nl;
+    
+    const  labelListList& cPoints = mesh_.cellPoints();//Labels de los puntos de las celdas
+    labelListList scPoints = cPoints;//Puntos de la celda modelo (shapeada)
+      os << "cPoints " << cPoints << nl;
+      
+    forAll(cPoints, celli)      //Mirar c/u de las celdas
     {
-      List <label> tempLabelList(0);//No idea on how to clean a list
-      for (int j=0;j<=2;j++)//Caras de la respectiva celda
+      //Ubica las caras de cada cela en el orden dado en las intersecciones de lCaras
+      //De este modo que se pueden ubicar los puntos en posFaces
+      List <labelList> pointFacesShape(0);
+      for (int i=0;i<=7;i++)//Caras de la respectiva celda
       {
-        label tempLabel= posFaces[cellId][lCaras[i][j]];
-        tempLabelList.append(tempLabel);
+        List <label> tempLabelList(0);//No idea on how to clean a list
+        for (int j=0;j<=2;j++)//Caras de la respectiva celda
+        {
+          label tempLabel= posFaces[celli][lCaras[i][j]];
+          tempLabelList.append(tempLabel);
+        }
+        pointFacesShape.append(tempLabelList);
       }
-      pointFacesShape.append(tempLabelList);
-    }
+      
+      //Encuentra la ubicación de los puntos al comparar la tabla de caras intersectadas
+      // con las caras reales del volumen construido por openFOam
+      const labelList& cIPoints = cPoints[celli];
+      os << "cIPoints " << cIPoints << nl;
+      forAll (cIPoints,cIPointsi)  //Puntos de la celda actual
+      {
+//        os << "cIPoints[" << cIPointsi << "]= " << cIPoints[cIPointsi] << nl;
+        label curPoint = cIPoints[cIPointsi]; //Current point's label
+//        os << "curPoint " << lPoint << nl;
+        for (int j=0;j<=7;j++)     //Comparar con puntos de la celda modelo
+        {
+            if (fPoints[curPoint]==pointFacesShape[j]) scPoints[celli][j]=curPoint;
+        }
+      }
+    }    
+    os << "scPoints " << scPoints << nl;
 
-    //TODO: MODIFICAR ESTO PARA QUE SÓLO USE LOS PTS DE CADA CELDA
-//      forAll (pointFacesShape,pointFacesShapei)//Caras de la respectiva celda
-    for (int i=0;i<=7;i++)//Puntos de la respectiva celda
-    {
-//        forAll (pointFacesShape,pointFacesShapej)//Caras de la respectiva celda
-      for (int j=0;j<=7;j++)//Puntos de la celda modelo
-      {
-          if (fPoints[i]==pointFacesShape[j])
-             os << "p"<<j<< " = " << points[i] << nl;
-      }
-    }
-    
-    
     //UN:Pirámides y tetraedros quedan pendientes mientras se confirma que el método del hexaedro funciona
 
 //        }
