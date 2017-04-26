@@ -109,9 +109,10 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *    -Sacar el centroide de cada una de las caras mapeadas
 *    -Restar al centroide de la celda al centroide de la cara
 *    -Clasificar los valores positivos en cada eje como máximos y negativos como mínimos respecto a cada eje
-    -Basado en lo anterior, identificar caras posiciones de vértices
-      -Encontrar los vértices comunes a una cara
-      -Implementar == para los grupos de vértices hallados
+*    -Basado en lo anterior, identificar caras posiciones de vértices
+*      -Encontrar los vértices comunes a una cara
+*      -Implementar == para los grupos de vértices hallados
+       -    //TODO: MODIFICAR ESTO PARA QUE SÓLO USE LOS PTS DE CADA CELDA
     -Mapear caras y vértices a posiciones de KIVA4
     -imprimir lo que se mapeó
     -Ver si se cumple el patrón para mallas diferentes

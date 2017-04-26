@@ -277,38 +277,46 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os) const
       os << " " << "cFaces[" << cFacesi << "] " << cFaces[cFacesi] << nl;
       label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
       os << "cellFaceId " << cellFaceId << nl;
-
-      //pto 0 según manual de oFoam caras:[4,0,2]
-      //pto 1 según manual de oFoam caras:[4,1,2]
-      //pto 2 según manual de oFoam caras:[4,1,3]
-      //pto 3 según manual de oFoam caras:[4,0,3]
-      //pto 4 según manual de oFoam caras:[5,0,2]
-      //pto 5 según manual de oFoam caras:[5,1,2]
-      //pto 6 según manual de oFoam caras:[5,1,3]
-      //pto 7 según manual de oFoam caras:[5,0,3]
-      
-      const labelListList& ebrio=mesh_.pointFaces();//UN: Halla listas de caras comunes a un punto
-      
-      os << " " << "ebrio[0] " << ebrio[0]  << nl;
-      labelList borracho=ebrio[0];
-      os << " " << "ebrio[0]" << ebrio[0]  << nl;
-      borracho[0]=ebrio[0][0];
-      borracho[1]=ebrio[0][1];
-      borracho[2]=ebrio[0][2];
-      if (ebrio[0]==borracho) os << "ebrio!! " << nl;
-      borracho[0]=ebrio[0][1];
-      borracho[1]=ebrio[0][2];
-      borracho[2]=ebrio[0][0];
-      os << " " << "borracho " << borracho  << nl;
-      forAll (ebrio,ebrioi)//Caras de la respectiva celda
-      {
-          if (ebrio[ebrioi]==borracho) os << "ebrio 2 veces!! " << nl;
-      }
-      
     }
-    os << " " << "posFaces " << posFaces  << nl;
-    const labelListList& ebrio=mesh_.pointFaces();
-    os << " " << "ebrio " << ebrio  << nl;
+    
+    const labelListList& fPoints=mesh_.pointFaces();
+      os << "fPoints " << fPoints << nl;
+      
+    List <labelList> pointFacesShape(0);
+    int lCaras [8][3] = {//véase 5.1.3: Cell Shapes:
+                         //https://cfd.direct/openfoam/user-guide/mesh-description/
+                        {4, 0, 2},//Caras que intersecan el pto 0 según manual oFoam 
+                        {4, 1, 2},//Caras que intersecan el pto 1 según manual oFoam 
+                        {4, 1, 3},//Caras que intersecan el pto 2 según manual oFoam 
+                        {4, 0, 3},//Caras que intersecan el pto 3 según manual oFoam 
+                        {5, 0, 2},//Caras que intersecan el pto 4 según manual oFoam 
+                        {5, 1, 2},//Caras que intersecan el pto 5 según manual oFoam 
+                        {5, 1, 3},//Caras que intersecan el pto 6 según manual oFoam 
+                        {5, 0, 3},//Caras que intersecan el pto 7 según manual oFoam 
+                        };
+                        
+    for (int i=0;i<=7;i++)//Caras de la respectiva celda
+    {
+      List <label> tempLabelList(0);//No idea on how to clean a list
+      for (int j=0;j<=2;j++)//Caras de la respectiva celda
+      {
+        label tempLabel= posFaces[cellId][lCaras[i][j]];
+        tempLabelList.append(tempLabel);
+      }
+      pointFacesShape.append(tempLabelList);
+    }
+
+    //TODO: MODIFICAR ESTO PARA QUE SÓLO USE LOS PTS DE CADA CELDA
+//      forAll (pointFacesShape,pointFacesShapei)//Caras de la respectiva celda
+    for (int i=0;i<=7;i++)//Puntos de la respectiva celda
+    {
+//        forAll (pointFacesShape,pointFacesShapej)//Caras de la respectiva celda
+      for (int j=0;j<=7;j++)//Puntos de la celda modelo
+      {
+          if (fPoints[i]==pointFacesShape[j])
+             os << "p"<<j<< " = " << points[i] << nl;
+      }
+    }
     
     
     //UN:Pirámides y tetraedros quedan pendientes mientras se confirma que el método del hexaedro funciona
