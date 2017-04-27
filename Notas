@@ -115,20 +115,27 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *       -MODIFICAR ESO PARA QUE SÓLO USE LOS PTS DE CADA CELDA
 *       -Modificar para que encuentre una colección de labels de puntos, en vez de ptos
        -Imprimir los labels de los ptos en el formato de KIVA
-          -Añadir formato de ptos de KIVA
-          -Añadir formato de caras de KIVA
-    -Mapear caras y vértices a posiciones de KIVA4
-    -imprimir lo que se mapeó
+*          -Añadir formato de ptos de KIVA
+*          -Añadir formato de caras de KIVA
+*    -Mapear caras y vértices a posiciones de KIVA4
+*    -imprimir lo que se mapeó
+    -Hacer que el program escriba las condiciones de frontera
+      -Separar la función que crea posFaces: la que dice la posición de las caras
+      -Hacer que el programa de celdas funciones con posFaces separado
+      -Limpiar la info que escribe de debugueo
+      -Usar posFaces para sacar los tipos de las caras
+      -Probar de nuevo_
+        -cubo de 1 elemento
+        -cubo de 4 elementos
     -Ver si se cumple el patrón para mallas diferentes
       -Malla de 1 elementos
-         -para las caras
-         -para los puntos
-      -Malla de 2 elementos
-         -para las caras
-         -para los puntos
+*         -para las caras
+*         -para los puntos
+          -para las fronteras
       -Malla de 4 elementos
-         -para las caras
-         -para los puntos
+*         -para las caras
+*         -para los puntos
+          -para las fronteras
 ============
 
 USO

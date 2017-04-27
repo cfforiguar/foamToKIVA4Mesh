@@ -48,10 +48,6 @@ SourceFiles
 namespace Foam
 {
 
-class cell;
-bool operator==(const labelList&, const labelList&);
-inline bool operator!=(const labelList&, const labelList&);
-
 namespace meshWriters
 {
 
@@ -87,6 +83,8 @@ class STARCD
 
         //- Write boundary
         void writeBoundary(Ostream&) const;
+        
+        bool isContained (const labelList&, const labelList&) const;
         
 
 
