@@ -79,14 +79,14 @@ class STARCD
         void writePoints(Ostream&) const;
 
         //- Write cells
-        void writeCells(Ostream&) const;
+        void writeCells(Ostream&,const cellList&) const;
 
         //- Write boundary
-        void writeBoundary(Ostream&) const;
+        void writeBoundary(Ostream&,const cellList&) const;
         
         bool isContained (const labelList&, const labelList&) const;
         
-
+        cellList rePosFaces() const;
 
 public:
 

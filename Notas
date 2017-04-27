@@ -120,13 +120,16 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *    -Mapear caras y vértices a posiciones de KIVA4
 *    -imprimir lo que se mapeó
     -Hacer que el program escriba las condiciones de frontera
-      -Separar la función que crea posFaces: la que dice la posición de las caras
-      -Hacer que el programa de celdas funciones con posFaces separado
+*      -Separar la función que crea posFaces: la que dice la posición de las caras
+*      -Hacer que el programa de celdas funcione con posFaces separado
+       -incorporar diccionario de CFrontera de KIVA4
+       -Hacer que use el dicionario para poner las condiciones que son y ya
       -Limpiar la info que escribe de debugueo
-      -Usar posFaces para sacar los tipos de las caras
+*      -Usar posFaces para sacar los tipos de las caras
       -Probar de nuevo_
         -cubo de 1 elemento
-        -cubo de 4 elementos
+*        -cubo de 4 elementos
+    -LLAMAR A CAROLINA MUNERA PARA LA COSA ESA
     -Ver si se cumple el patrón para mallas diferentes
       -Malla de 1 elementos
 *         -para las caras
@@ -136,6 +139,10 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *         -para las caras
 *         -para los puntos
           -para las fronteras
+     -Cámara de Mauricio Rueda (hacer malla spray)
+     -Tobera (con ideas de mallado alternativo)
+     -Otras mallas estáticas
+
 ============
 
 USO
