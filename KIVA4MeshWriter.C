@@ -418,35 +418,97 @@ void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFa
 {
     const cellList& cells  = mesh_.cells();
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-//    const wordList patchNames=patches.names();
-
+    const wordList patchNames=patches.names();
+    labelList swPatches(0);
+    wordList patchChange;
+    labelList  patchCodes (19,0);
+    cellList newPatches=posFaces;   
+    
     Info<< "Writing " << os.name() << " : "
         << (mesh_.nFaces() - patches[0].start()) << " boundaries" << endl;
     Info<< "Writing " << os.name() << " : "
         << (mesh_.nFaces()) << " caras" << endl;
 
+    patchCodes[ 0]=10  ; patchChange.append(word("moving"));
+    patchCodes[ 1]=11  ; patchChange.append(word("v1bottom"));
+    patchCodes[ 2]=12  ; patchChange.append(word("v1top"));
+    patchCodes[ 3]=13  ; patchChange.append(word("v2bottom"));
+    patchCodes[ 4]=14  ; patchChange.append(word("v2top"));
+    patchCodes[ 5]=15  ; patchChange.append(word("v3bottom"));
+    patchCodes[ 6]=16  ; patchChange.append(word("v3top"));
+    patchCodes[ 7]=17  ; patchChange.append(word("v4bottom"));
+    patchCodes[ 8]=18  ; patchChange.append(word("v4top"));
+    patchCodes[ 9]=20  ; patchChange.append(word("solid"));
+    patchCodes[10]=21  ; patchChange.append(word("solidh"));
+    patchCodes[11]=30  ; patchChange.append(word("axis"));
+    patchCodes[12]=40  ; patchChange.append(word("fluid"));
+    patchCodes[13]=50  ; patchChange.append(word("periodf"));
+    patchCodes[14]=60  ; patchChange.append(word("periodd"));
+    patchCodes[15]=70  ; patchChange.append(word("inflow"));
+    patchCodes[16]=80  ; patchChange.append(word("outflow"));
+    patchCodes[17]=90  ; patchChange.append(word("presin"));
+    patchCodes[18]=100 ; patchChange.append(word("presout"));
+
+
+    forAll(patchNames, patchNamesi)//Seleciono parches válidos para ahorrarme unos ciclos
+    {
+      forAll(patchChange, patchChangei)
+      {
+        if (patchNames[patchNamesi]==patchChange[patchChangei]){
+            swPatches.append(patchCodes[patchChangei]);
+/* //Debug
+             os
+               << "swPatches[" << patchNamesi << "]= " << swPatches[patchNamesi] << endl
+               << "patchCodes[" << patchChangei << "]= " << patchCodes[patchChangei] << endl
+               << "";
+*/ //Debug
+        }
+      }
+    }
+
+
+
+    forAll(cells, celli)//Reasigno los números de parche
+    {
+      const cell curCell=posFaces[celli];
+      
+      forAll(curCell, curCelli)
+      {
+        const label currPatch = patches.whichPatch(curCell[curCelli]);
+        
+        if (currPatch==-1){
+          newPatches[celli][curCelli]=patchCodes[12];/////caso donde el parche = -1, entonces es fluido
+          continue;
+        }
+        if (currPatch>-1)
+              newPatches[celli][curCelli]=swPatches[currPatch]; //Acá hago la asignación de los demás parches
+      }
+    }
+    
+   
     forAll(cells, celli)
     {
-//      const faceList& faces = cellFaces_[celli];
-      
-      /////***************
-      //const faceList& cFacesB = cells[celli].faces();
-      /////***************
-      os
-//        << celli << " " //label de la celda
-        << 10 << " "   //tipo de celda
-//        << cFaces << " "    //labels de las caras de la celda
-        << "";
-      //forAll(cFaces, cFacei)
-      //{
-         os
-           << patches.whichPatch(posFaces[celli][0]) << " "
-           << patches.whichPatch(posFaces[celli][1]) << " "
-           << patches.whichPatch(posFaces[celli][2]) << " "
-           << patches.whichPatch(posFaces[celli][3]) << " "
-           << patches.whichPatch(posFaces[celli][4]) << " "
-           << patches.whichPatch(posFaces[celli][5]) << " "
-           << endl;
+
+/*       
+       os
+         << 10 << "patches "   //tipo de celda
+         << patches.whichPatch(posFaces[celli][0]) << " "
+         << patches.whichPatch(posFaces[celli][1]) << " "
+         << patches.whichPatch(posFaces[celli][2]) << " "
+         << patches.whichPatch(posFaces[celli][3]) << " "
+         << patches.whichPatch(posFaces[celli][4]) << " "
+         << patches.whichPatch(posFaces[celli][5]) << " "
+         << endl;
+*/         
+       os
+         << 10 << " "   //tipo de celda
+         << newPatches[celli][0] << " "
+         << newPatches[celli][1] << " "
+         << newPatches[celli][2] << " "
+         << newPatches[celli][3] << " "
+         << newPatches[celli][4] << " "
+         << newPatches[celli][5] << " "
+         << endl;
     }
 }
 

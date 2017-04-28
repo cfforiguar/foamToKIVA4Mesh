@@ -114,19 +114,30 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *      -Implementar == para los grupos de vértices hallados
 *       -MODIFICAR ESO PARA QUE SÓLO USE LOS PTS DE CADA CELDA
 *       -Modificar para que encuentre una colección de labels de puntos, en vez de ptos
-       -Imprimir los labels de los ptos en el formato de KIVA
+*       -Imprimir los labels de los ptos en el formato de KIVA
 *          -Añadir formato de ptos de KIVA
 *          -Añadir formato de caras de KIVA
 *    -Mapear caras y vértices a posiciones de KIVA4
 *    -imprimir lo que se mapeó
-    -Hacer que el program escriba las condiciones de frontera
+*    -Hacer que el program escriba las condiciones de frontera
 *      -Separar la función que crea posFaces: la que dice la posición de las caras
 *      -Hacer que el programa de celdas funcione con posFaces separado
-       -incorporar diccionario de CFrontera de KIVA4
-       -Hacer que use el dicionario para poner las condiciones que son y ya
+*       -incorporar diccionario de CFrontera de KIVA4
+*       -Hacer que use el dicionario para poner las condiciones que son y ya
+       -Hacer pruebas
+         -Remallar el cubo de 1 vols
+*         -Remallar el cubo de 8 vols
+         -Remallar el cubo de 8k vols
+       -Ordenar y guardar carpetas de pruebas
+         -cubo de 1  vols, 4 cond. frontera : Para ver problemas de asignación de caras y puntos
+         -cubo de 8  vols, 4 cond. frontera : Para ver problemas de asignación de caras y puntos
+         -cubo de 8k vols, 4 cond. frontera : Para ver problemas de asignación de caras y puntos
+         -cubo de 1  vols, paredes y E/S presión : Para probar con corridas
+         -cubo de 8  vols, paredes y E/S presión : Para probar con corridas
+         -cubo de 8k vols, paredes y E/S presión : Para probar con corridas
       -Limpiar la info que escribe de debugueo
 *      -Usar posFaces para sacar los tipos de las caras
-      -Probar de nuevo_
+*      -Probar de nuevo_
         -cubo de 1 elemento
 *        -cubo de 4 elementos
     -LLAMAR A CAROLINA MUNERA PARA LA COSA ESA
