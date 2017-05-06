@@ -141,20 +141,30 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
         -cubo de 1 elemento
 *        -cubo de 4 elementos
     -LLAMAR A CAROLINA MUNERA PARA LA COSA ESA
-    -Ver si se cumple el patrón para mallas diferentes
-      -Malla de 1 elementos
+*    -Ver si se cumple el patrón para mallas diferentes
+*      -Malla de 1 elementos
 *         -para las caras
 *         -para los puntos
-          -para las fronteras
-      -Malla de 4 elementos
+*          -para las fronteras
+*      -Malla de 4 elementos
 *         -para las caras
 *         -para los puntos
-          -para las fronteras
+*          -para las fronteras
      -Cámara de Mauricio Rueda (hacer malla spray)
-     -Tobera (con ideas de mallado alternativo)
+*     -Tobera (con ideas de mallado alternativo)
      -Otras mallas estáticas
+     -Implementar nuevo algoritmo para escoger caras
+*       -Mirar el capítulo de mallado de Chung
+       -Buscar función de vectores de las mallas
+        -Hacerles ingeniería inversa
+        -¿Usan vectores unitarios?: NO
+        -Si celli!=faceowner(face) Then invierta el sentido del Vector de la cara
+        -Para calcular vUnitarios:   vector n = mesh_.faceAreas()[facei];
+n /= mag(n) + VSMALL;
 
 ============
 
 USO
 ./foamToKIVA4Mesh -scale 1
+#COMPILAR
+clear && clear && wmake

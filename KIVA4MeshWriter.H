@@ -86,7 +86,7 @@ class STARCD
         
         bool isContained (const labelList&, const labelList&) const;
         
-        cellList rePosFaces() const;
+        cellList rePosFaces(Ostream&) const;
 
 public:
 
