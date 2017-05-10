@@ -160,7 +160,7 @@ Foam::cellList Foam::meshWriters::STARCD::rePosFaces(Ostream& os) const //Me gua
         }
 
         
-   //LABEL
+   //LABELf
         
         //UN: ESTE ALGORITMO FALLARÍA SI ALGÚN ELEMENTO ESTÁ A EXACTAMENTE 45° PUES AL MENOS 2 CARAS TENDRÍAN VALORES IDÉNTICOS EN CADA COORDENADA
         label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
