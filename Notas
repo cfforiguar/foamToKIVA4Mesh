@@ -171,7 +171,7 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
       -Clasificar caras, no celdas
         -Usar criterio de vectores de caras: paralelos a x, y o z -> No elimina el problema de ambigüedad intra-celda
           -mirar qué pasa-> No elimina el problema de ambigüedad intra-celda
-      -¿Qué pasa si se usa un vector que va de una cara a la cara opuesta? --->Si es que oppositefaces funciona
+*      -¿Qué pasa si se usa un vector que va de una cara a la cara opuesta? --->Si es que oppositefaces funciona
         -//Se slimina de facto el problema de ambigüedad entre celdas opuestas
 *        -Tomar 1 de las caras y su cara opuesta
 *        -Restar sus posiciones de acuerdo a sus labels
@@ -182,8 +182,16 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *        -Comprobar coherencia en la asignación de puntos
 *        -Comprobar choerencia en la asignación de cFrontera
 *        -Comprobar que la selección de caras sea coherente --> ¿por qué hay 2 caras sólidas/elemento si max es 1?
-        
       
+    -Idear forma de detectar celdas ignoradas
+      -Imprimir el número de celda según oFoam
+      -Imprimir labels de nodos de la celda según oFoam
+      -Imprimir nodos de la celda según oFoam
+    -Mirar cómo demonios cargar un debugger con GUI
+-Mire los vectores con mayores componentes en x,y,z
+-asigne las caras a un bicho
+-Asegúrese de que las caras no tienen asignación duplicada
+
 
 
 
