@@ -1,9 +1,6 @@
 #Instalar openFoam
 https://openfoam.org/download/4-1-source/
 
-#Cargar el entorno de OpenFoam
-source /home/carlos/OpenFOAM/OpenFOAM-4.0/etc/bashrc
-
 #Ir al directorio de openFOAM
 #https://openfoam.org/download/4-1-source/
 
@@ -140,7 +137,6 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *      -Probar de nuevo_
         -cubo de 1 elemento
 *        -cubo de 4 elementos
-    -LLAMAR A CAROLINA MUNERA PARA LA COSA ESA
 *    -Ver si se cumple el patrón para mallas diferentes
 *      -Malla de 1 elementos
 *         -para las caras
@@ -155,16 +151,65 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
      -Otras mallas estáticas
      -Implementar nuevo algoritmo para escoger caras
 *       -Mirar el capítulo de mallado de Chung
-       -Buscar función de vectores de las mallas
-        -Hacerles ingeniería inversa
-        -¿Usan vectores unitarios?: NO
-        -Si celli!=faceowner(face) Then invierta el sentido del Vector de la cara
-        -Para calcular vUnitarios:   vector n = mesh_.faceAreas()[facei];
-n /= mag(n) + VSMALL;
+*       -Buscar función de vectores de las mallas
+*        -Hacerles ingeniería inversa
+*        -¿Usan vectores unitarios?: NO
+*        -Si celli!=faceowner(face) Then invierta el sentido del Vector de la cara
+*        -Para calcular vUnitarios:   vector n = mesh_.faceAreas()[facei]; n /= mag(n) + VSMALL;
+*    -Encontrar la forma de imprimir las celdas y nodos de la malla de OpenFOAM
+*      -Instalar paraFoam
+*        -Solucionar error de instalación de paraFoam: había que isntalar el programa time
+*      -Buscar/diseñar procedimeinto de visualización -> Procedimiento encotnrado en internet
+*        -Anotar dicho procedimiento
+*       -Buscar forma de imprimir las caras -> No se pudo, tocó con los vértices
+*    -Hacer que se presente la información de forma más clara
+*      -La lista de caras final debe tener -1 para los números que no fueron modificados
+*    -Probar la rutina oppositeface
+*      -¿Funciona como creo que funciona en las celdas hexagonales?  ----->Sí
+*        -Dada cualquier cara ¿Imprime la que está al frente?        ----->Sí
+    -Pensar un algoritmo que haga uso de caras comunes
+      -Clasificar caras, no celdas
+        -Usar criterio de vectores de caras: paralelos a x, y o z -> No elimina el problema de ambigüedad intra-celda
+          -mirar qué pasa-> No elimina el problema de ambigüedad intra-celda
+      -¿Qué pasa si se usa un vector que va de una cara a la cara opuesta? --->Si es que oppositefaces funciona
+        -//Se slimina de facto el problema de ambigüedad entre celdas opuestas
+*        -Tomar 1 de las caras y su cara opuesta
+*        -Restar sus posiciones de acuerdo a sus labels
+*        -Comparar con valores anteriores de X,Y y Z: Guardar los labels del par de caras si son mayores en alguno
+*        -Asignar a la cara en la cola del vector el bottom o lo que corresponda y a la otra la contrapuesta
+*        -Comprobar que no haya asignaciones dobles para ningún eje
+*          -¿Cómo hacerlo?
+*        -Comprobar coherencia en la asignación de puntos
+*        -Comprobar choerencia en la asignación de cFrontera
+*        -Comprobar que la selección de caras sea coherente --> ¿por qué hay 2 caras sólidas/elemento si max es 1?
+        
+      
+
+
+
+./Allwclean
+./Allwmake
+Changeset: 10 (69a44e519812) Funciona para el elemento #5
+ -la asignación correcta de ptos y de caras da bien para este elemento: 1 7 11 15 2 8 12 16 
+ -También coge correctamente los top y bottom de todas las celdas
+
+
+41329207
+
 
 ============
 
-USO
-./foamToKIVA4Mesh -scale 1
+#USO
+  ./foamToKIVA4Mesh -scale 1
+
 #COMPILAR
 clear && clear && wmake
+#VER NODOS Y ELEMENTOS DE LA MALLA DE OPENFOAM
+#  cd [directorio de la malla]
+paraFOam
+#  Seguir instrucciones de estas 2 páginas (hay una copia de esto en un mail con título foamToKIVA4Mesh):
+https://www.cfd-online.com/Forums/paraview/103358-how-display-cell-number-paraview.html
+http://public.kitware.com/pipermail/paraview/2008-April/007826.html
+
+#Cargar el entorno de OpenFoam
+source /home/carlos/OpenFOAM/OpenFOAM-4.0/etc/bashrc

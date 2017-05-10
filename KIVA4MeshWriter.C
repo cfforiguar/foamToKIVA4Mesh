@@ -53,44 +53,43 @@ Foam::cellList Foam::meshWriters::STARCD::rePosFaces(Ostream& os) const //Me gua
     cellList posFaces = cells;//Me guarda la lista de caras que usaré para top, bottom, etc
     const vectorField& facesCentres = mesh_.faceCentres(); //Return cell centres as volVectorField. More...   
     const vectorField& cellsCentres = mesh_.cellCentres(); //Return cell centres as volVectorField. More...       
-    vectorField distFaceCentres = facesCentres;
     //<DEBUG>
     const faceList& faces  = mesh_.faces();
     const vectorField& 	vFaces = mesh_.faceAreas();
     const labelList& owner = mesh_.faceOwner();
-    os << "vFaces "<< vFaces << nl;
-    os << "Owner "<< owner << nl;
+//    os << "vFaces "<< vFaces << nl;
+//    os << "Owner "<< owner << nl;
     //<\DEBUG>
 
+    forAll (cells, cellId)
+    {
+      const labelList& cFaces  = cells[cellId];
+      forAll (cFaces,cFacesi)//Caras de la respectiva celda
+      {        
+        posFaces[cellId][cFacesi]=-1;
+      }
+    }
+//        os << "posFaces: Inicial "<< posFaces << nl;    
     forAll (cells, cellId)
     {
   //    os << "facesCentres"<< facesCentres << nl;
   //        os << "cellsCentres"<< cellsCentres << nl;            
       //UN: Para las demás caras, usar label sCellnFaces=sCell.nFaces() 
       //UN:    Esto funciona para cualquier cara pero lo hace leeeento. Es mejor separar por tipos de caras y luego hacer un loop para cada tipo
-      double  test[6] {-1.0e-6,-1.0e-6,-1.0e-6,1.0e-6,1.0e-6,1.0e-6};
-             
-  //    forAll(cells, cellId)
+      double  test[6] {0.0,0.0,0.0,0.0,0.0,0.0};
       const labelList& cFaces  = cells[cellId];
   //    os << " " << "posFaces " << posFaces  << nl;
     
       forAll (cFaces,cFacesi)//Caras de la respectiva celda
       {
+        bool noMatch=1;
+//          os << "cellId "<< cellId << nl;
         label curFace = cFaces[cFacesi]; //Current faces's labels     
-        distFaceCentres[curFace]=facesCentres[curFace]-cellsCentres[cellId];
-        vector vFace=vFaces[curFace];
-        vFace /= mag(vFace);
-        os << "cellId "<< cellId << nl;
-        os << "  vFace "<< vFace << nl;
-        if (owner[curFace]!=cellId){
-          os << "     Owned "<< cellId << nl;
-          vFace=vFace*-1.0;
-          os << "     vFace New"<< vFace << nl;
-        }
-        //<DEBUG>
-//        os << "curFacePoints "<< faces[curFace] << nl;
-        //<\DEBUG>
-//        os << "distFaceCentres[curFace]"<< distFaceCentres[curFace] << nl;
+//          os << "curFace "<< faces[curFace] << nl;        
+        const label	curOppFace=cells[cellId].opposingFaceLabel(curFace, faces);//Opposite of current faces's labels  
+//          os << "curOppFace "<< faces[curOppFace] << nl;
+        vector uOppFaces =facesCentres[curFace]-facesCentres[curOppFace]; uOppFaces /= mag(uOppFaces);
+//          os << "uOppFaces "<< uOppFaces << nl;
   /* //LABEL     //OFOAM: Left, Right, Front, Back, Bottom, Top
         if (test[0]>vFace.x()) posFaces[cellId][0]=curFace;//x min = posFaces[cellId][0]
         if (test[1]<vFace.x()) posFaces[cellId][1]=curFace;//x max =       .
@@ -101,43 +100,73 @@ Foam::cellList Foam::meshWriters::STARCD::rePosFaces(Ostream& os) const //Me gua
   */ //LABEL
         
    //LABEL     //KIVA: left 0, front 1, bottom 2, right 3, derrire 4, top 5
-        if (test[0]>vFace.x()){
-          test[0]=vFace.x();
-          posFaces[cellId][0]=curFace;//x min = posFaces[cellId][0]
-          os << "-x= " << vFace.x() << nl;
-        }
-        if (test[1]>vFace.y()){
-          test[1]=vFace.y();
-          posFaces[cellId][1]=curFace;//y min =       .
-          os << "-y= " <<  vFace.y() << nl;
-        }
-        if (test[2]>vFace.z()){
-          test[2]=vFace.z();
-          posFaces[cellId][2]=curFace;//z min =       .
-          os << "-z= " <<  vFace.z() << nl;
-        }
-        if (test[3]<vFace.x()){
-          test[3]=vFace.x();
+        if (test[0]<uOppFaces.x()){
+          test[0]=uOppFaces.x();
+//          os << "uOppFaces.x()= " << uOppFaces.x() << nl;
+          posFaces[cellId][0]=curOppFace;//x min = posFaces[cellId][0]
+//          os << "-x= " << facesCentres[curOppFace].x() << nl;
+          test[3]=uOppFaces.x();
           posFaces[cellId][3]=curFace;//x max =       .
-          os << "x= " <<  vFace.x() << nl;
+//          os << "x= " <<  facesCentres[curFace].x() << nl;
+          noMatch=0;
         }
-        if (test[4]<vFace.y()){
-          test[4]=vFace.y();
+        if (test[1]<uOppFaces.y()){
+          test[1]=uOppFaces.y();
+          posFaces[cellId][1]=curOppFace;//y min =       .
+//          os << "-y= " <<  facesCentres[curOppFace].y() << nl;
+          test[4]=uOppFaces.y();
           posFaces[cellId][4]=curFace;//y max =       .
-          os << "y= " << vFace.y() << nl;
+//          os << "y= " << facesCentres[curFace].y() << nl;
+          noMatch=0;
         }
-        if (test[5]<vFace.z()){
-          test[5]=vFace.z();
+        if (test[2]<uOppFaces.z()){
+          test[2]=uOppFaces.z();
+          posFaces[cellId][2]=curOppFace;//z min =       .
+//          os << "-z= " <<  facesCentres[curOppFace].z() << nl;
+          test[5]=uOppFaces.z();
           posFaces[cellId][5]=curFace;//z max =       .
-          os << "z= " << vFace.z() << nl;
+//          os << "z= " << facesCentres[curFace].z() << nl;
+          noMatch=0;
         }
+        if (noMatch){//In case of 2 couples of faces with the same orientation (ie 45°)
+          if (test[0]==uOppFaces.x()){
+            test[0]=uOppFaces.x();
+//            os << "uOppFaces.x()= " << uOppFaces.x() << nl;
+            posFaces[cellId][0]=curOppFace;//x min = posFaces[cellId][0]
+//            os << "-x= " << facesCentres[curOppFace].x() << nl;
+            test[3]=uOppFaces.x();
+            posFaces[cellId][3]=curFace;//x max =       .
+//            os << "x= " <<  facesCentres[curFace].x() << nl;
+            noMatch=0;
+            }
+          else if (test[1]==uOppFaces.y()){
+            test[1]=uOppFaces.y();
+            posFaces[cellId][1]=curOppFace;//y min =       .
+//            os << "-y= " <<  facesCentres[curOppFace].y() << nl;
+            test[4]=uOppFaces.y();
+            posFaces[cellId][4]=curFace;//y max =       .
+//            os << "y= " << facesCentres[curFace].y() << nl;
+            noMatch=0;
+            }
+          else if (test[2]==uOppFaces.z()){
+            test[2]=uOppFaces.z();
+            posFaces[cellId][2]=curOppFace;//z min =       .
+//            os << "-z= " <<  facesCentres[curOppFace].z() << nl;
+            test[5]=uOppFaces.z();
+            posFaces[cellId][5]=curFace;//z max =       .
+//            os << "z= " << facesCentres[curFace].z() << nl;
+            noMatch=0;
+            }
+        }
+
+        
    //LABEL
         
         //UN: ESTE ALGORITMO FALLARÍA SI ALGÚN ELEMENTO ESTÁ A EXACTAMENTE 45° PUES AL MENOS 2 CARAS TENDRÍAN VALORES IDÉNTICOS EN CADA COORDENADA
         label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
       }
     }
-    os << posFaces << endl;
+//    os << "posFaces: Final " << posFaces << endl;
     return posFaces;
 }
 
@@ -400,8 +429,7 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os,const cellList& posFaces)
       forAll(scPointsCell,scPointsCelli) 
         scPointsCell[scPointsCelli]=-1;
     }
-    
-    
+
     
     forAll(cPoints, celli)      //Mirar c/u de las celdas
     {
