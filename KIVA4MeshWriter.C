@@ -46,147 +46,6 @@ const Foam::label Foam::meshWriters::STARCD::foamToStarFaceAddr[4][6] =
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-
-Foam::cellList Foam::meshWriters::STARCD::rePosFaces(Ostream& os) const //Me guarda la lista de caras que usaré para top, bottom, etc
-{
-    const cellList& cells  = mesh_.cells();
-    cellList posFaces = cells;//Me guarda la lista de caras que usaré para top, bottom, etc
-    const vectorField& facesCentres = mesh_.faceCentres(); //Return cell centres as volVectorField. More...   
-    const vectorField& cellsCentres = mesh_.cellCentres(); //Return cell centres as volVectorField. More...       
-    //<DEBUG>
-    const faceList& faces  = mesh_.faces();
-    const vectorField& 	vFaces = mesh_.faceAreas();
-    const labelList& owner = mesh_.faceOwner();
-//    os << "vFaces "<< vFaces << nl;
-//    os << "Owner "<< owner << nl;
-    //<\DEBUG>
-
-    forAll (cells, cellId)
-    {
-      const labelList& cFaces  = cells[cellId];
-      forAll (cFaces,cFacesi)//Caras de la respectiva celda
-      {        
-        posFaces[cellId][cFacesi]=-1;
-      }
-    }
-//        os << "posFaces: Inicial "<< posFaces << nl;    
-    forAll (cells, cellId)
-    {
-  //    os << "facesCentres"<< facesCentres << nl;
-  //        os << "cellsCentres"<< cellsCentres << nl;            
-      //UN: Para las demás caras, usar label sCellnFaces=sCell.nFaces() 
-      //UN:    Esto funciona para cualquier cara pero lo hace leeeento. Es mejor separar por tipos de caras y luego hacer un loop para cada tipo
-      double  test[6] {0.0,0.0,0.0,0.0,0.0,0.0};
-      const labelList& cFaces  = cells[cellId];
-  //    os << " " << "posFaces " << posFaces  << nl;
-      bool noMatch=1;
-      forAll (cFaces,cFacesi)//Caras de la respectiva celda
-      {
-//          os << "cellId "<< cellId << nl;
-        label curFace = cFaces[cFacesi]; //Current faces's labels     
-//          os << "curFace "<< faces[curFace] << nl;        
-        const label	curOppFace=cells[cellId].opposingFaceLabel(curFace, faces);//Opposite of current faces's labels  
-//          os << "curOppFace "<< faces[curOppFace] << nl;
-        vector uOppFaces =facesCentres[curFace]-facesCentres[curOppFace]; uOppFaces /= mag(uOppFaces);
-//          os << "uOppFaces "<< uOppFaces << nl;
-  /* //LABEL     //OFOAM: Left, Right, Front, Back, Bottom, Top
-        if (test[0]>vFace.x()) posFaces[cellId][0]=curFace;//x min = posFaces[cellId][0]
-        if (test[1]<vFace.x()) posFaces[cellId][1]=curFace;//x max =       .
-        if (test[2]>vFace.y()) posFaces[cellId][2]=curFace;//y min =       .
-        if (test[3]<vFace.y()) posFaces[cellId][3]=curFace;//y max =       .
-        if (test[4]>vFace.z()) posFaces[cellId][4]=curFace;//z min =       .
-        if (test[5]<vFace.z()) posFaces[cellId][5]=curFace;//z max =       .
-  */ //LABEL
-        
-   //LABEL     //KIVA: left 0, front 1, bottom 2, right 3, derrire 4, top 5
-        if (test[0]<uOppFaces.x()){
-          test[0]=uOppFaces.x();
-//          os << "uOppFaces.x()= " << uOppFaces.x() << nl;
-          posFaces[cellId][0]=curOppFace;//x min = posFaces[cellId][0]
-//          os << "-x= " << facesCentres[curOppFace].x() << nl;
-          test[3]=uOppFaces.x();
-          posFaces[cellId][3]=curFace;//x max =       .
-//          os << "x= " <<  facesCentres[curFace].x() << nl;
-          noMatch=0;
-        }
-        if (test[1]<uOppFaces.y()){
-          test[1]=uOppFaces.y();
-          posFaces[cellId][1]=curOppFace;//y min =       .
-//          os << "-y= " <<  facesCentres[curOppFace].y() << nl;
-          test[4]=uOppFaces.y();
-          posFaces[cellId][4]=curFace;//y max =       .
-//          os << "y= " << facesCentres[curFace].y() << nl;
-          noMatch=0;
-        }
-        if (test[2]<uOppFaces.z()){
-          test[2]=uOppFaces.z();
-          posFaces[cellId][2]=curOppFace;//z min =       .
-//          os << "-z= " <<  facesCentres[curOppFace].z() << nl;
-          test[5]=uOppFaces.z();
-          posFaces[cellId][5]=curFace;//z max =       .
-//          os << "z= " << facesCentres[curFace].z() << nl;
-          noMatch=0;
-        }
-
-          if (test[0]==uOppFaces.x() && noMatch){
-            test[0]=uOppFaces.x();
-//            os << "uOppFaces.x()= " << uOppFaces.x() << nl;
-            posFaces[cellId][0]=curOppFace;//x min = posFaces[cellId][0]
-//            os << "-x= " << facesCentres[curOppFace].x() << nl;
-            test[3]=uOppFaces.x();
-            posFaces[cellId][3]=curFace;//x max =       .
-//            os << "x= " <<  facesCentres[curFace].x() << nl;
-            noMatch=0;
-          }
-          if (test[1]==uOppFaces.y() && noMatch){
-            test[1]=uOppFaces.y();
-            posFaces[cellId][1]=curOppFace;//y min =       .
-//            os << "-y= " <<  facesCentres[curOppFace].y() << nl;
-            test[4]=uOppFaces.y();
-            posFaces[cellId][4]=curFace;//y max =       .
-//            os << "y= " << facesCentres[curFace].y() << nl;
-            noMatch=0;
-          }
-          if (test[2]==uOppFaces.z() && noMatch){
-            test[2]=uOppFaces.z();
-            posFaces[cellId][2]=curOppFace;//z min =       .
-//            os << "-z= " <<  facesCentres[curOppFace].z() << nl;
-            test[5]=uOppFaces.z();
-            posFaces[cellId][5]=curFace;//z max =       .
-//            os << "z= " << facesCentres[curFace].z() << nl;
-            noMatch=0;
-            }
-        
-   //LABELf
-        
-        label cellFaceId = findIndex(cFaces, cFacesi);//UN: ¿¿¿¿pasa el índice local de cara cFacesi a índice global de caras mesh.faces()????
-      }
-    }
-//    os << "posFaces: Final " << posFaces << endl;
-    forAll (cells, cellId)
-    {
-      const labelList& cFaces  = cells[cellId];
-      bool cFallida=0;
-      forAll (cFaces,cFacesi)//Caras de la respectiva celda
-      {        
-        if(posFaces[cellId][cFacesi]==-1){cFallida=1;os << "CELDA INDETERMINADA: "  << nl;};
-      }
-        if(cFallida==1){ 
-          os << "CELDA INDETERMINADA: "  << nl;
-          os << "cellId " << cellId << nl;
-          os << "posFaces " << posFaces[cellId] << nl;
-          os << "nodeLabels " << cells[cellId] << nl;
-       
-/*          forAll (cFaces,cFacesi)//Caras de la respectiva celda
-          {        
-            if(posFaces[cellId][cFacesi]==-1) bool cFallida=1;
-          }      */
-        }
-    }
-//    os << "posFaces " << posFaces << nl;
-    return posFaces;
-}
-
 bool  Foam::meshWriters::STARCD::isContained (const labelList& a, const labelList& b) const
 {
    List<bool> fnd(a.size(), false);
@@ -223,6 +82,287 @@ bool  Foam::meshWriters::STARCD::isContained (const labelList& a, const labelLis
      }
      return result;
 }
+
+
+Foam::cellList Foam::meshWriters::STARCD::rePosFaces(Ostream& os) const //Me guarda la lista de caras que usaré para top, bottom, etc
+{
+    const cellList& cells  = mesh_.cells();
+    cellList posFaces = cells;//Me guarda la lista de caras que usaré para top, bottom, etc
+    const vectorField& facesCentres = mesh_.faceCentres(); //Return cell centres as volVectorField. More...   
+    const vectorField& cellsCentres = mesh_.cellCentres(); //Return cell centres as volVectorField. More...       
+    //<DEBUG>
+    const faceList& faces  = mesh_.faces();
+    const vectorField& 	vFaces = mesh_.faceAreas();
+    const labelList& owner = mesh_.faceOwner();
+//    os << "vFaces "<< vFaces << nl;
+//    os << "Owner "<< owner << nl;
+    //<\DEBUG>
+
+    forAll (cells, cellId)
+    {
+      const labelList& cFaces  = cells[cellId];
+      forAll (cFaces,cFacesi)//Caras de la respectiva celda
+      {        
+        posFaces[cellId][cFacesi]=-1;
+      }
+    }
+//        os << "posFaces: Inicial "<< posFaces << nl;
+
+   //UN: Creo variables que clonaré más adelante para guardar los datos de las caras de la celda
+    List <labelList> dummyLabelListList(0);
+    labelList dummyLabelList(2);dummyLabelList[0]=-1;dummyLabelList[1]=-1;
+    List <vector> dummyVectorList(0);
+    vector dummyVector=facesCentres[0]; dummyVector[0]=-9;dummyVector[1]=-9;dummyVector[2]=-9;
+    for (int i=0;i<6;i++)//Caras de la respectiva celda
+    {
+      dummyLabelListList.append(dummyLabelList);
+      dummyVectorList.append(dummyVector);
+    }
+
+    forAll (cells, cellId)
+    {
+  //    os << "facesCentres"<< facesCentres << nl;
+  //        os << "cellsCentres"<< cellsCentres << nl;            
+      //UN: Para las demás caras, usar label sCellnFaces=sCell.nFaces() 
+      //UN:    Esto funciona para cualquier cara pero lo hace leeeento. Es mejor separar por tipos de caras y luego hacer un loop para cada tipo
+      double  test[6] {0.0,0.0,0.0,0.0,0.0,0.0};
+      const labelList& cFaces  = cells[cellId];
+  //    os << " " << "posFaces " << posFaces  << nl;
+      List <vector> cuFaceVector=dummyVectorList;
+      List <labelList> cOppoFaces=dummyLabelListList;
+      for (label iFaces=0;iFaces<=5;iFaces++){//Caras de la respectiva celda
+        label curFace = cFaces[iFaces]; //Current faces's labels     
+        label	curOppFace=cells[cellId].opposingFaceLabel(curFace, faces);//Opposite of current faces's labels  
+        cOppoFaces[iFaces][0]=curFace;
+        cOppoFaces[iFaces][1]=curOppFace;
+        vector uOppFaces =facesCentres[curFace]-facesCentres[curOppFace]; uOppFaces /= mag(uOppFaces);
+        cuFaceVector[iFaces]=uOppFaces;
+      }      
+
+      double max=0.0;      
+      int posMax[6][3]=  //[Place][Axis]
+          {{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1},{-1,-1,-1}};
+      //Busque las componentes mayores de dirección de caras
+      for (int Axis=0;Axis<=2;Axis++)
+      {   //Encuentre los valores máximos/eje
+      
+        bool NotRanked[]={1,1,1,1,1,1}; //Lleva la cuenta de los vectores ya ranqueados
+        for (int Place=0;Place<6;Place++)
+        {  //Saque los 3 primeros ejes por magnitud
+          int maxLocation=0;
+          bool flag=0;
+          for (int i=0;i<6;i++)
+          {
+            if (NotRanked[i])
+            {  //Si aún no ha sido clasificado el valor, úselo como máximo
+              max=cuFaceVector[i][Axis];
+              maxLocation=i;
+              break;
+            }
+          }
+          for (int currVectori=0;currVectori<=5;currVectori++)
+          {//Hace la comparación
+            if (NotRanked[currVectori])
+            {  //Si aún no ha sido clasificado el valor, úselo
+              double currValue=cuFaceVector[currVectori][Axis];
+              if (max <= currValue)//UN: Si no funciona, pedir que sea un valor > 0
+              {  //Si supera el valor máximo hasta la fecha, guárdelo
+                maxLocation=currVectori;
+                max=currValue;
+                flag=1;
+              }
+            }
+          }
+          if (flag){
+            posMax[Place][Axis]=maxLocation;
+            NotRanked[maxLocation]=0;
+            flag=0;
+          }
+        }
+/*        
+        os << "NotRanked " << nl; 
+        for(int q=0;q<6;q++){
+          os << " "<< NotRanked[q]; 
+
+        }
+*/
+
+      }
+
+
+/*      
+      os << "cuFaceVector "<< cuFaceVector << nl; 
+      os << " " << "posMax "  << nl;
+      for (int i =0;i<6;i++){
+        for (int j =0;j<3;j++){
+          os << " " << posMax[i][j];
+        }
+        os << nl;
+      }
+*/      
+      
+//      os << " cellId " << cellId << nl;
+      
+      //Mirar si hay ejes repetidos
+      //Y vetar los ejes no repetdos
+      bool Repetida[3]={1,1,1};
+      int escogidos[3]={-1,-1,-1};
+      bool cFallida=0;
+      for (int Axis=0;Axis<3;Axis++)
+      { 
+        bool flag=0;       
+        if(posMax[0][Axis]==-1) {cFallida=1;os << "ERROR: Vectores unitarios no determinados "  << nl;};
+        for (int Axis2=0;Axis2<3;Axis2++)//Caras de la respectiva celda
+        {        
+          if(isContained(cOppoFaces[posMax[0][Axis]],cOppoFaces[posMax[0][Axis2]])
+              && Axis!=Axis2) 
+          {
+            flag=1;
+          }
+        }
+        Repetida[Axis]=flag;
+        if (!flag){
+          escogidos[Axis]=posMax[0][Axis];
+        }
+      }
+/*      
+      os << " Repetida";
+      for (int j =0;j<3;j++){
+        os << " " << Repetida[j] ;
+      } os << nl;
+      os << " escogidos";
+      for (int j =0;j<3;j++){
+        os << " " << escogidos[j] ;
+      } os << nl;      
+*/      
+      
+      //Ranquear los ejes
+      //Asignarlos si no hay repetidos
+      //Si hay repetidos
+      //-Tomar el eje donde el repetido es mayor
+      //  -Vetar el repetido mayor
+      //-Tomar otro eje y asignarle el siguiente en el ranking que no este ya escogido
+      
+      
+      //Ranquear los ejes repetidos
+      bool  NotRanked[]={1,1,1,1,1,1}; //Lleva la cuenta de los vectores ya ranqueados
+      for (int i=0;i<3;i++)  {NotRanked[i]=Repetida[i];}
+      
+      int axisOrder[3]={-1,-1,-1};
+      for (int Place=0;Place<3;Place++)
+      {  //Saque los 3 primeros ejes por magnitud
+        int maxLocation=0;
+        bool flag=0;
+        for (int Axis=0;Axis<3;Axis++)
+        {
+          if (NotRanked[Axis])
+          {  //Escoja otro valor no ranqueado para clasificarlo
+            max=cuFaceVector[posMax[0][Axis]][Axis];
+            maxLocation=Axis;
+            break;
+          }
+        }
+        for (int Axis=0;Axis<=2;Axis++)
+        {//Hace la comparación
+          if (NotRanked[Axis])
+          {  //Si aún no ha sido clasificado el valor, úselo
+            double currValue=cuFaceVector[posMax[0][Axis]][Axis];
+            if (max<=currValue)
+            {  //Si supera el valor máximo hasta la fecha, guárdelo
+              maxLocation=Axis;
+              max=currValue;
+              flag=1;
+            }
+          }
+        }
+        if (flag){
+          axisOrder[Place]=maxLocation;
+          NotRanked[maxLocation]=0;
+          flag=0;
+        }
+      }
+
+/*      
+      os << " axisOrder";
+      for (int j =0;j<3;j++){
+        os << " " << axisOrder[j] ;
+      } os << nl;
+*/
+      
+      for (int Place=0;Place<3;Place++)
+      {
+        if (axisOrder[Place]>-1){
+          for (int cont=0;cont<6;cont++)
+          {
+            int Candidate=posMax[cont][axisOrder[Place]];
+            bool axisFlag[3]={1,1,1};
+            for(int i=0;i<3;i++){
+              if (escogidos[i]>-1){
+                axisFlag[i]=!isContained(cOppoFaces[Candidate],cOppoFaces[escogidos[i]]);
+              }
+            }
+            if (axisFlag[0] && axisFlag[1] && axisFlag[2])
+            {
+              escogidos[axisOrder[Place]]=Candidate;
+              break;
+            }
+          }
+        }        
+      }
+
+/*
+      os << " escogidos";
+      for (int j =0;j<3;j++){
+        os << " " << escogidos[j] ;
+      } os << nl;
+
+      os << cOppoFaces << nl;
+*/      
+      //LABEL     //KIVA: left 0, front 1, bottom 2, right 3, derrire 4, top 5
+      posFaces[cellId][0]=cOppoFaces[escogidos[0]] [1];//x min = posFaces[cellId][0]
+      posFaces[cellId][3]=cOppoFaces[escogidos[0]] [0];//x max =       .
+      
+      posFaces[cellId][1]=cOppoFaces[escogidos[1]] [1];//y min =       .
+      posFaces[cellId][4]=cOppoFaces[escogidos[1]] [0];//y max =       .
+      
+      posFaces[cellId][2]=cOppoFaces[escogidos[2]] [1];//z min =       .
+      posFaces[cellId][5]=cOppoFaces[escogidos[2]] [0];//z max =       .
+
+      
+    }
+/*
+    os << "posFaces: Final " << posFaces << endl;
+*/
+
+
+    forAll (cells, cellId)
+    {
+      const labelList& cFaces  = cells[cellId];
+      bool cFallida=0;
+      forAll (cFaces,cFacesi)//Caras de la respectiva celda
+      {        
+        if(posFaces[cellId][cFacesi]==-1){cFallida=1;os << "ERROR: CELDA INDETERMINADA: "  << nl;};
+        forAll (cFaces,cFacesii)//Caras de la respectiva celda
+        {        
+          if(posFaces[cellId][cFacesi]==posFaces[cellId][cFacesii]
+              && cFacesi!=cFacesii)
+               {cFallida=1;os << "ERROR: CARAS REPETIDAS: "  << nl;};
+        }
+      }
+        if(cFallida==1){ 
+          os << "cellId " << cellId << nl;
+          os << "posFaces " << posFaces[cellId] << nl;
+          os << "nodeLabels " << cells[cellId] << nl;
+                 /*          forAll (cFaces,cFacesi)//Caras de la respectiva celda
+          {        
+            if(posFaces[cellId][cFacesi]==-1) bool cFallida=1;
+          }      */
+        }
+    }
+//    os << "posFaces " << posFaces << nl;
+    return posFaces;
+}
+
 
 
 void Foam::meshWriters::STARCD::writeHeader(Ostream& os, const int nPoints, const int nCells)

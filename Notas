@@ -84,13 +84,13 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *    -renombar el archivo de condiciones de frontera
 *    -usarlo para ver qué pasó en la conversión normal
 *  -Hacer prueba intermedia que compruebe puntos, celdas y caras
-  -Hacer mallado de un cilindro en Salome
-    -Discretizrlo y simularlo
-  -Mallado de 1 cubo de 1 sólo elemento
+*  -Hacer mallado de un cilindro en Salome
+*    -Discretizrlo y simularlo
+*  -Mallado de 1 cubo de 1 sólo elemento
 *   -En salomé
 *   -En kiva4grid
 *  -Escribir el kiva4grid definitivo
-   -Probar con eso:
+*   -Probar con eso:
 *     -Están bien mapeados los Vértices ->NO
 *     -Están bien mapeados las caras ->NO
 *     -Están bien mapeados las cFrontera ->NPI
@@ -99,10 +99,10 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *  -funciones map en ensightMesh.C -> Para las mallas
   -función inplaceRenumber en ensightMesh.C?
   
-  -Hacer programa que conforme la hipótesis del orden de las celdas hexaedricas
+*  -Hacer programa que conforme la hipótesis del orden de las celdas hexaedricas
 *    -eliminar la dependencia de writemesh.h --> igual esta librería puede ser útil después.
 *    -Hacer que use fvMesh en todo lado
-    -Consultar cada una de caras mapeadas de las celdas
+*    -Consultar cada una de caras mapeadas de las celdas
 *    -Sacar el centroide de cada una de las caras mapeadas
 *    -Restar al centroide de la celda al centroide de la cara
 *    -Clasificar los valores positivos en cada eje como máximos y negativos como mínimos respecto a cada eje
@@ -147,6 +147,7 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *         -para los puntos
 *          -para las fronteras
      -Cámara de Mauricio Rueda (hacer malla spray)
+     
 *     -Tobera (con ideas de mallado alternativo)
      -Otras mallas estáticas
      -Implementar nuevo algoritmo para escoger caras
@@ -182,15 +183,69 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *        -Comprobar coherencia en la asignación de puntos
 *        -Comprobar choerencia en la asignación de cFrontera
 *        -Comprobar que la selección de caras sea coherente --> ¿por qué hay 2 caras sólidas/elemento si max es 1?
-      
-    -Idear forma de detectar celdas ignoradas
-      -Imprimir el número de celda según oFoam
-      -Imprimir labels de nodos de la celda según oFoam
-      -Imprimir nodos de la celda según oFoam
+*    -Idear forma de detectar celdas ignoradas
+*      -Imprimir el número de celda según oFoam
+*      -Imprimir labels de nodos de la celda según oFoam
+*      -Imprimir nodos de la celda según oFoam
+*    -Inventar e implementar algoritmo para ranquear
+*      -inventarse el algoritmo
+*      -evitar caras repetidas
+*      -cree lista de labels caras opuestas
+*      -cree lista de labels vectores
+*      -encuentre vectores con sus caras y guardelos
+*      -Coja los 6 vectores
+*      -Ranquee los vectores de mayor a menor componente en x,y,z
+*      -Guarde c/u de los valores máximos para los tres ejes
+*      -Mire los valores mayores para ver si algún par de caras está repetido
+*         -Si no están repetidos, siga adelante
+*            -Si no lo es, compare el segundo con los demás (excepto el primero)
+*           -Escoger el eje con menor componente
+*           -Hallar otro par de caras diferente para ese eje
+*           -Buscar otro vector para el segundo más grande o el 3ro según sea el caso
+*           -Volver a comprobar que no hayan ejes repetidos
+*   -Hacer la malla de la Tobera final 
+*     -Averiguar mallado que funciona
+*     -Averiguar procedimiento de mallado
+*       -Hacer una malla tal como aparece en "Malla Funcional" en el archivo minitobera.hdf
+*       -unir todos los nodos en el botón "Merge nodes"
+*       -Unir las caras que qeudaron sueltas con el botón "Merge elements"
+    -Hacer malla de Andrés Rueda
+*      -Pedir malla a Mantilla a las 11:00 am
+*       -Hacer modelo CAD
+         -parametrizarlos lesson 22
+*         -Hacer un wire 2d Y luego una revolución para crear el sólido
+       -Hexa con submesh lesson 35
+*    -Hacer malla de cilindro-Pistón
+*    -Hacer malla de cilindro-Pistón-Bowl
     -Mirar cómo demonios cargar un debugger con GUI
--Mire los vectores con mayores componentes en x,y,z
--asigne las caras a un bicho
--Asegúrese de que las caras no tienen asignación duplicada
+*    -Hacer Informe para pedir pago
+      -Pedir cita con Mantilla
+
+    -Añadir la detección de grupos de volúmenes
+      -Averiguar función que detecta los tipo de volúmenes en openFoam
+      -Pasar la lista de volúmenes de control a OpenFOam
+      -Escribir la función que detecta y escribe eso
+
+    
+    0.0 0.0
+    0.0 0.635
+    5.6 0.635
+    67.3° 2.54 Y -> (6.396879, 2.54), fillet r=0.2
+    13.3971 2.54
+    16.997101 1.5
+    16.997101 0.0
+    0.0 0.0
+    
+    
+----------------------------------------------     
+
+
+
+
+    -MEDIDA DESESPERADA: Separar el código de clasifiación para evaluarlo con datos de celdas problemáticas
+      -Imprimir todos los datos de la celda problemática
+      -Hacer librería aparte con el código de clasifiación de caras para hacer unit testing
+  
 
 
 
@@ -200,7 +255,7 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 Changeset: 10 (69a44e519812) Funciona para el elemento #5
  -la asignación correcta de ptos y de caras da bien para este elemento: 1 7 11 15 2 8 12 16 
  -También coge correctamente los top y bottom de todas las celdas
-
+-Use los mayores para asignar 
 
 41329207
 
