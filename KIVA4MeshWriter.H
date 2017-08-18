@@ -35,8 +35,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef STARCDMeshWriter_H
-#define STARCDMeshWriter_H
+#ifndef KIVA4MeshWriter.H
+#define KIVA4MeshWriter.H
 
 #include "meshWriter.H"
 #include "IOstream.H"

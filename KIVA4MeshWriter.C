@@ -650,13 +650,14 @@ void Foam::meshWriters::STARCD::writeCells(Ostream& os,const cellList& posFaces)
 void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFaces) const
 {
     const cellList& cells  = mesh_.cells();
+    
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
     const wordList patchNames=patches.names();
     labelList swPatches(0);
     wordList patchChange;
     labelList  patchCodes (19,0);
-    cellList newPatches=posFaces;   
-    
+    cellList newPatches=posFaces;
+              
     Info<< "Writing " << os.name() << " : "
         << (mesh_.nFaces() - patches[0].start()) << " boundaries" << endl;
     Info<< "Writing " << os.name() << " : "
@@ -681,9 +682,9 @@ void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFa
     patchCodes[16]=80  ; patchChange.append(word("outflow"));
     patchCodes[17]=90  ; patchChange.append(word("presin"));
     patchCodes[18]=100 ; patchChange.append(word("presout"));
-
-
-    forAll(patchNames, patchNamesi)//Seleciono parches válidos para ahorrarme unos ciclos
+    
+    
+    forAll(patchNames, patchNamesi)//Seleciono parches presentes para ahorrarme unos ciclos
     {
       forAll(patchChange, patchChangei)
       {
@@ -699,9 +700,8 @@ void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFa
       }
     }
 
-
-
-    forAll(cells, celli)//Reasigno los números de parche
+    //Reasigno los números de parche
+    forAll(cells, celli)
     {
       const cell curCell=posFaces[celli];
       
@@ -714,10 +714,56 @@ void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFa
           continue;
         }
         if (currPatch>-1)
-              newPatches[celli][curCelli]=swPatches[currPatch]; //Acá hago la asignación de los demás parches
+          newPatches[celli][curCelli]=swPatches[currPatch]; //Acá hago la asignación de los demás parches
       }
     }
     
+    labelList swZones(0);
+    const cellZoneMesh&  cellZones=mesh_.cellZones();
+    const wordList zoneNames=cellZones.names();
+    labelList  cellZCodes (8,0);
+    wordList cellZChange;
+    labelList NewCZones(cells.size(),0);
+    
+//    os << "cellZones " << cellZones << endl;
+//    os << "cellZones[0][0]" << cellZones[0][0] << endl;//cellLabels      List<label> 
+//    os << "test " << cellZones.whichZone(patchCodes[ 0]) <<endl;    
+//    os << "zoneNames " << zoneNames << endl;
+    
+    cellZCodes[ 0]=0   ; cellZChange.append(word("inactive"));
+    cellZCodes[ 1]=10  ; cellZChange.append(word("squish"));
+    cellZCodes[ 2]=11  ; cellZChange.append(word("bowl"));
+    cellZCodes[ 3]=14  ; cellZChange.append(word("dome"));
+    cellZCodes[ 4]=20  ; cellZChange.append(word("port1"));
+    cellZCodes[ 5]=30  ; cellZChange.append(word("port2"));
+    cellZCodes[ 6]=40  ; cellZChange.append(word("port3"));
+    cellZCodes[ 7]=50  ; cellZChange.append(word("port4"));
+
+
+
+    forAll(zoneNames, zoneNamesi)//Seleciono sólo zonas presentes para ahorrarme unos ciclos
+    {
+      forAll(cellZChange, cellZChangei)
+      {
+        if (zoneNames[zoneNamesi]==cellZChange[cellZChangei]){
+            swZones.append(cellZCodes[cellZChangei]);
+/* //Debug
+             os
+               << "swZones[" << zoneNamesi << "]= " << swZones[zoneNamesi] << endl
+               << "cellZCodes[" << cellZChangei << "]= " << cellZCodes[cellZChangei] << endl
+               << "";
+*/  //Debug
+        }
+      }
+    }
+    
+
+    forAll(cells, celli)//Reasigno los números zona de OpenFoam a Kiva4
+    {
+      NewCZones[celli]=swZones[cellZones.whichZone(celli)];
+    }
+    
+
    
     forAll(cells, celli)
     {
@@ -734,7 +780,7 @@ void Foam::meshWriters::STARCD::writeBoundary(Ostream& os, const cellList& posFa
          << endl;
 */         
        os
-         << 10 << " "   //tipo de celda
+         << NewCZones [celli]    << " "   //tipo de celda
          << newPatches[celli][0] << " "
          << newPatches[celli][1] << " "
          << newPatches[celli][2] << " "

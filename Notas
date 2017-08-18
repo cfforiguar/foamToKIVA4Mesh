@@ -221,10 +221,10 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
 *    -Hacer Informe para pedir pago
       -Pedir cita con Mantilla
 
-    -Añadir la detección de grupos de volúmenes
-      -Averiguar función que detecta los tipo de volúmenes en openFoam
-      -Pasar la lista de volúmenes de control a OpenFOam
-      -Escribir la función que detecta y escribe eso
+*    -Añadir la detección de grupos de volúmenes
+*      -Averiguar función que detecta los tipo de volúmenes en openFoam
+*      -Pasar la lista de volúmenes de control a OpenFOam
+*      -Escribir la función que detecta y escribe eso
 
     
     0.0 0.0
@@ -236,7 +236,11 @@ Objetivos: Cargar librerías de OpenFoam en el programa:
     16.997101 0.0
     0.0 0.0
     
-    
+-BENCHMARKS del mallador:
+  -Cámara de Mauricio Rueda con malla spray 
+  -Cámara motor diesel
+  -Camara motor CFR
+  -Trabajo de carlos Barrera 
 ----------------------------------------------     
 
 
