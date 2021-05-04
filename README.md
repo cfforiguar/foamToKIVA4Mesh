@@ -1,3 +1,9 @@
+#foamToKIVA4Mesh
+Utility to convert mesh from OpenFOAM to KIVA-4 format.
+
+It was published in the followign article:
+Soto, C.A.B., Gordillo, D.S.P., Rodriguez, C.F.F., Gonzalez, J.M.M. 2021. Open source extensions applied to meshing problems for KIVA 4. International Journal of Applied Science and Engineering, 18, 2020135. https://doi.org/10.6703/IJASE.202103_18(1).012
+
 =======================
 #ARCHIVO DE OBJETIVOS DE foamToKIVA4Mesh
 gedit /home/carlos/OpenFOAM/carlos-4.0/run/foamToKIVA4Mesh/Notas
